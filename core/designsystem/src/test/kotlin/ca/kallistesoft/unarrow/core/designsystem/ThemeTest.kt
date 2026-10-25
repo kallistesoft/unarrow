@@ -10,6 +10,7 @@ import androidx.compose.ui.test.performClick
 import ca.kallistesoft.unarrow.core.testing.ScreenshotDevice
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNotEquals
+import org.junit.Assert.assertTrue
 import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -36,6 +37,14 @@ class ThemeTest {
         }
         assertNotEquals(light, dark)
         assertEquals(Color(0xFFF6F4EF), lightBackground)
+    }
+
+    @Test
+    fun `the spacing scale grows`() {
+        val scale = listOf(Spacing.xs, Spacing.s, Spacing.m, Spacing.l, Spacing.xl, Spacing.xxl)
+        assertEquals(scale.sorted(), scale)
+        assertTrue(Spacing.screen > Spacing.l)
+        assertTrue(Sizes.touchTarget >= Sizes.icon)
     }
 
     @Test
