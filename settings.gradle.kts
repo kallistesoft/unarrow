@@ -31,3 +31,7 @@ rootProject.name = "Unarrow"
 enableFeaturePreview("TYPESAFE_PROJECT_ACCESSORS")
 
 include(":core:game")
+include(":core:data")
+include(":core:designsystem")
+include(":core:testing")
+include(":core:ui")

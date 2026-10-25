@@ -7,9 +7,9 @@ import org.junit.Assert.assertTrue
 import org.junit.Test
 
 class BoardTest {
-    // . → .
-    // . ↑ ←      the ↑ at (1,1) is free; the ← at (1,2) is blocked by it; the → at (0,1) is free.
-    private val right = Arrow(0, 0, 1, Direction.RIGHT)
+    // . . →
+    // . ↑ ←      the ↑ at (1,1) and the → at (0,2) are free; the ← at (1,2) is blocked by the ↑.
+    private val right = Arrow(0, 0, 2, Direction.RIGHT)
     private val up = Arrow(1, 1, 1, Direction.UP)
     private val left = Arrow(2, 1, 2, Direction.LEFT)
     private val board = Board(2, 3, listOf(right, up, left))
@@ -29,7 +29,7 @@ class BoardTest {
     }
 
     @Test
-    fun `an arrow pointing past the one above it is not blocked`() {
+    fun `arrows with nothing on their path are free`() {
         assertNull(board.blockerOf(up))
         assertNull(board.blockerOf(right))
         assertEquals(listOf(right, up), board.freeArrows())

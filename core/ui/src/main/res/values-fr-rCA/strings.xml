@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Français (Canada) : seulement les textes qui diffèrent de values-fr (France). -->
+<resources>
+    <string name="home_remove_ads">Retirer les annonces</string>
+    <string name="home_ads_removed">Sans annonces. Merci!</string>
+    <string name="home_daily_done">Réussi aujourd’hui. Revenez demain!</string>
+    <string name="game_hint_ad">Indice (annonce)</string>
+    <string name="game_won">Réussi!</string>
+    <string name="game_extra_life">Regarder une annonce : +1 vie</string>
+    <string name="settings_restore">Récupérer les achats</string>
+    <string name="settings_restored">Achats récupérés</string>
+    <string name="settings_privacy">Paramètres de confidentialité</string>
+    <string name="share_play">À ton tour : %1$s</string>
+</resources>

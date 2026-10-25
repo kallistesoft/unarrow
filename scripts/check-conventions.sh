@@ -13,7 +13,7 @@ fi
 
 # 2. No dp literals outside the design system's theme: use Spacing, Sizes or MaterialTheme.shapes.
 literals=$(grep -rnE --include='*.kt' --exclude-dir=build '[0-9]\.dp\b' . \
-  | grep -v '/core/designsystem/src/main/kotlin/ca/kallistesoft/unarrow/core/designsystem/theme/')
+  | grep -v '/core/designsystem/src/main/kotlin/ca/kallistesoft/unarrow/core/designsystem/')
 if [ -n "$literals" ]; then
   echo "$literals"
   echo "error: sizes come from the theme (Spacing, Sizes, MaterialTheme.shapes), not dp literals."

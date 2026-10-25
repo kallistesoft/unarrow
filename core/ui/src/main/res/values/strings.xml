@@ -1,0 +1,88 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">Unarrow</string>
+    <string name="tagline">Tap the arrows out.</string>
+    <string name="back">Back</string>
+
+    <!-- Home -->
+    <string name="home_play">Play</string>
+    <string name="home_level">Level %1$d</string>
+    <string name="home_daily">Daily puzzle</string>
+    <string name="home_daily_number">Daily #%1$d</string>
+    <string name="home_daily_new">A new puzzle every day</string>
+    <string name="home_daily_done">Solved today. Come back tomorrow!</string>
+    <plurals name="home_streak">
+        <item quantity="one">%d-day streak</item>
+        <item quantity="other">%d-day streak</item>
+    </plurals>
+    <string name="home_remove_ads">Remove ads</string>
+    <string name="home_ads_removed">No ads. Thank you!</string>
+    <string name="settings">Settings</string>
+
+    <!-- Game -->
+    <string name="game_level_title">Level %1$d</string>
+    <string name="game_daily_title">Daily #%1$d</string>
+    <plurals name="game_lives">
+        <item quantity="one">%d life left</item>
+        <item quantity="other">%d lives left</item>
+    </plurals>
+    <string name="game_hint">Hint</string>
+    <plurals name="game_hints_left">
+        <item quantity="one">%d hint</item>
+        <item quantity="other">%d hints</item>
+    </plurals>
+    <string name="game_hint_ad">Hint (ad)</string>
+    <string name="game_restart">Restart</string>
+    <string name="game_board">Puzzle board</string>
+    <string name="game_arrow">Arrow pointing %1$s</string>
+    <string name="direction_up">up</string>
+    <string name="direction_down">down</string>
+    <string name="direction_left">left</string>
+    <string name="direction_right">right</string>
+    <string name="game_won">Solved!</string>
+    <plurals name="game_taps">
+        <item quantity="one">%d tap</item>
+        <item quantity="other">%d taps</item>
+    </plurals>
+    <string name="game_next">Next level</string>
+    <string name="game_home">Home</string>
+    <string name="game_share">Share</string>
+    <string name="game_lost">Out of lives</string>
+    <string name="game_lost_body">Tap only the arrows with a clear path to the edge.</string>
+    <string name="game_retry">Try again</string>
+    <string name="game_extra_life">Watch an ad: +1 life</string>
+    <string name="game_get_hints">Get 10 hints</string>
+    <string name="game_tutorial">Tap an arrow to slide it out. It only leaves if nothing is in its way.</string>
+
+    <!-- Sharing -->
+    <string name="share_level">I solved Unarrow level %1$d %2$s</string>
+    <string name="share_daily">Unarrow Daily #%1$d ✅ %2$s</string>
+    <string name="share_play">Play it: %1$s</string>
+    <string name="share_chooser">Share your result</string>
+
+    <!-- Settings -->
+    <string name="settings_sound">Sound</string>
+    <string name="settings_haptics">Vibration</string>
+    <string name="settings_language">Language</string>
+    <string name="settings_language_system">System default</string>
+    <string name="language_en">English</string>
+    <string name="language_fr_ca">Français (Canada)</string>
+    <string name="language_fr_fr">Français (France)</string>
+    <string name="settings_purchases">Purchases</string>
+    <string name="settings_restore">Restore purchases</string>
+    <string name="settings_restored">Purchases restored</string>
+    <string name="settings_privacy">Privacy options</string>
+    <string name="settings_rate">Rate Unarrow</string>
+    <string name="settings_version">Version %1$s</string>
+
+    <!-- Purchases -->
+    <string name="billing_unavailable">Purchases are unavailable right now.</string>
+    <string name="billing_hints_added">10 hints added</string>
+
+    <!-- Updates -->
+    <string name="force_update_title">Update required</string>
+    <string name="force_update_body">This version of Unarrow is no longer supported. Update it to keep playing.</string>
+    <string name="force_update_button">Update</string>
+    <string name="update_ready">An update is ready.</string>
+    <string name="update_restart">Restart</string>
+</resources>

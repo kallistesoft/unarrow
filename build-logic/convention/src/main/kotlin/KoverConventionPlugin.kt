@@ -37,6 +37,8 @@ class KoverConventionPlugin : Plugin<Project> {
                             "*_Provide*Factory*",
                             "dagger.hilt.internal.aggregatedroot.codegen.*",
                             "hilt_aggregated_deps.*",
+                            // Hilt modules: wiring only, checked by the app starting.
+                            "*.di.*Module*",
                         )
                         // Previews only feed Android Studio and the screenshot tests.
                         annotatedBy("androidx.compose.ui.tooling.preview.Preview", "*Generated*")

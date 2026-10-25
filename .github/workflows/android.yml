@@ -31,7 +31,7 @@ jobs:
         run: scripts/check-conventions.sh
 
       - name: Unit tests
-        run: ./gradlew :core:game:test --stacktrace
+        run: ./gradlew :core:game:test testDebugUnitTest --stacktrace
 
       # Every class needs 90% of its lines covered by the unit tests (KoverConventionPlugin). On failure, the report
       # (build/reports/kover/htmlUnit) is in the reports artifact.

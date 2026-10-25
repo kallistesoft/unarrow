@@ -17,6 +17,9 @@ plugins {
 // Unit test coverage of the app's modules, merged (see KoverConventionPlugin): ./gradlew koverVerifyUnit.
 dependencies {
     listOf(
+        ":core:data",
+        ":core:designsystem",
         ":core:game",
+        ":core:ui",
     ).forEach { kover(project(it)) }
 }
