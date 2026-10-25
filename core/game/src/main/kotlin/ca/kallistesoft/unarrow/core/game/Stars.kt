@@ -2,14 +2,18 @@ package ca.kallistesoft.unarrow.core.game
 
 /**
  * A solved puzzle's rating: 3 stars for no mistake within [targetSeconds] and no hint, 2 for at most one mistake
- * (whatever the time, or with a hint), 1 for any other win. A mistake is a tap on a blocked arrow.
+ * (whatever the time, or with a hint), 1 for any other win. A mistake is a slide: a tap on a blocked arrow, which costs
+ * a life.
  */
 object Stars {
     const val MAX = 3
 
-    /** Time to read the board, then a few seconds per arrow (10 arrows: 0:45, a 9 × 9 of 70: 3:45). */
-    private const val BASE_SECONDS = 15
-    private const val SECONDS_PER_ARROW = 3
+    /**
+     * Time to read the board, then a few seconds per arrow to think about locks, rotation and traps (10 arrows: 1:00,
+     * a 7 × 7 daily of 42: 3:08, a 9 × 9 of 64: 4:36).
+     */
+    private const val BASE_SECONDS = 20
+    private const val SECONDS_PER_ARROW = 4
 
     /** The time limit for 3 stars on a board of [arrowCount] arrows. */
     fun targetSeconds(arrowCount: Int): Int = BASE_SECONDS + SECONDS_PER_ARROW * arrowCount

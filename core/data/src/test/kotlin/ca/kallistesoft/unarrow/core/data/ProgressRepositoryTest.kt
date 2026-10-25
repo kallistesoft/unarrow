@@ -65,6 +65,14 @@ class ProgressRepositoryTest {
     }
 
     @Test
+    fun `tips are remembered once shown`() = runTest {
+        val repo = repository()
+        repo.markTipSeen("LOCKS")
+        repo.markTipSeen("LOCKS")
+        assertEquals(setOf("LOCKS"), repo.progress.first().tipsSeen)
+    }
+
+    @Test
     fun `each level keeps its best stars`() = runTest {
         val repo = repository()
         repo.completeLevel(3, stars = 2)

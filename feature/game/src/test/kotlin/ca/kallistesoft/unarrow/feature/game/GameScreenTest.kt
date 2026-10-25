@@ -20,6 +20,9 @@ import ca.kallistesoft.unarrow.core.game.Arrow
 import ca.kallistesoft.unarrow.core.game.Board
 import ca.kallistesoft.unarrow.core.game.Direction
 import ca.kallistesoft.unarrow.core.game.Levels
+import ca.kallistesoft.unarrow.core.game.Solution
+import ca.kallistesoft.unarrow.core.game.Solver
+import kotlinx.coroutines.Dispatchers
 import ca.kallistesoft.unarrow.core.testing.FakeAds
 import ca.kallistesoft.unarrow.core.testing.FakeEngagement
 import ca.kallistesoft.unarrow.core.testing.FakeProgressRepository
@@ -120,7 +123,7 @@ class GameScreenTest {
         compose.onNodeWithContentDescription("2 stars").assertExists()
         compose.onNodeWithText("0:42 · 6 taps").assertExists()
         compose.onNodeWithText("Best: ★★★").assertExists()
-        compose.onNodeWithText("3 stars: no mistakes, under 0:27").assertExists() // 15 s + 3 s × 4 arrows
+        compose.onNodeWithText("3 stars: no mistakes, under 0:36").assertExists() // 20 s + 4 s × 4 arrows
         compose.onNodeWithText("Next level").performClick()
         compose.onNodeWithText("Share").performClick()
         assertEquals(1, next)
@@ -145,7 +148,7 @@ class GameScreenTest {
         )
         compose.onNodeWithText("Daily #12").assertExists()
         compose.onNodeWithText("Best: ★★★ 0:30").assertExists()
-        compose.onNodeWithText("3 stars: no mistakes, under 0:27").assertDoesNotExist()
+        compose.onNodeWithText("3 stars: no mistakes, under 0:36").assertDoesNotExist()
         compose.onNodeWithText("Home").performClick()
         compose.onNodeWithText("Share").performClick()
         assertEquals(1, home)
@@ -173,7 +176,9 @@ class GameScreenTest {
         compose.onRoot().captureToImage() // Draws the board: tiles, hint, blocked flash, exits.
         compose.mainClock.advanceTimeBy(1_000)
         compose.onRoot().captureToImage()
-        compose.onNodeWithText("Tap an arrow to slide it out. It only leaves if nothing is in its way.").assertExists()
+        compose.onNodeWithText(
+            "Tap an arrow to send it off the board. If another arrow is in its way, it slides up to it and you lose a life.",
+        ).assertExists()
         compose.onAllNodesWithContentDescription("Arrow pointing", substring = true).fetchSemanticsNodes().let {
             assertEquals(4, it.size)
         }
@@ -225,6 +230,48 @@ class GameScreenTest {
     }
 
     @Test
+    fun `locks, keys and rotating arrows are drawn and labelled, and move as the board changes`() {
+        val spinner = Arrow(0, 0, 0, Direction.UP, rotating = true)
+        val key = Arrow(1, 0, 1, Direction.UP, key = 1)
+        val locked = Arrow(2, 1, 0, Direction.RIGHT, lock = 1)
+        val pink = Arrow(3, 1, 1, Direction.DOWN, key = 2)
+        var state by androidx.compose.runtime.mutableStateOf(
+            GameUiState(GameSession(GameMode.LEVELS, 30, 0, Board(2, 2, listOf(spinner, key, locked, pink)), 4)),
+        )
+        compose.setContent { UnarrowTheme { GameContent(state, GameActions()) } }
+        compose.onNodeWithContentDescription("Arrow pointing up, turning").assertExists()
+        compose.onNodeWithContentDescription("Arrow pointing up, blue key").assertExists()
+        compose.onNodeWithContentDescription("Arrow pointing right, blue lock").assertExists()
+        compose.onNodeWithContentDescription("Arrow pointing down, pink key").assertExists()
+        compose.onRoot().captureToImage()
+
+        // The key leaves (the lock fades), the spinner turns, then the unlocked arrow slides and shakes.
+        val opened = Board(2, 2, listOf(spinner.copy(direction = Direction.RIGHT), locked, pink))
+        state = state.copy(session = state.session!!.copy(board = opened, exits = listOf(key)))
+        compose.mainClock.advanceTimeBy(1_000)
+        compose.onNodeWithContentDescription("Arrow pointing right").assertExists()
+        compose.onNodeWithContentDescription("Arrow pointing right, turning").assertExists()
+        val locks = Board(2, 2, listOf(spinner, locked.copy(lock = 0), Arrow(5, 1, 1, Direction.UP, key = 0)))
+        state = state.copy(session = state.session!!.copy(board = locks, blocked = BlockedTap(locked.id, null, 2)))
+        compose.mainClock.advanceTimeBy(1_000)
+        compose.onNodeWithContentDescription("Arrow pointing right, orange lock").assertExists()
+        compose.onRoot().captureToImage()
+    }
+
+    @Test
+    fun `tips and a stuck board are explained above it`() {
+        var state by androidx.compose.runtime.mutableStateOf(GameUiState(session().copy(level = 30, tip = Tip.LOCKS)))
+        compose.setContent { UnarrowTheme { GameContent(state, GameActions()) } }
+        compose.onNodeWithText("Locked arrows can’t move until the key of their colour has left the board.").assertExists()
+        state = state.copy(session = state.session!!.copy(tip = Tip.ROTATING))
+        compose.onNodeWithText("Arrows marked ↻ turn a quarter clockwise after each of your moves.").assertExists()
+        state = state.copy(session = state.session!!.copy(stuck = true))
+        compose.onNodeWithText("No perfect way out from here. Restart to try again.").assertExists()
+        state = state.copy(session = state.session!!.copy(stuck = false, tip = null))
+        compose.onNodeWithTag("note").assertDoesNotExist()
+    }
+
+    @Test
     fun `restart starts the puzzle again`() {
         var restarts = 0
         show(GameUiState(session()), GameActions(onRestart = { restarts++ }))
@@ -269,16 +316,15 @@ class GameScreenTest {
     fun `the screen plays a daily with its ViewModel and goes home after the win`() {
         val ads = FakeAds()
         val vm = GameViewModel(
-            GameMode.DAILY, FakeProgressRepository(), { Levels.FIRST_DAILY_EPOCH_DAY }, ads, ads, FakePurchases(),
+            GameMode.DAILY, FakeProgressRepository(), { Levels.FIRST_DAILY_EPOCH_DAY }, Puzzles(Dispatchers.Unconfined), ads,
+            ads, FakePurchases(),
             FakeEngagement(), FakeEngagement(), ads,
         )
         var home = 0
         compose.setContent { UnarrowTheme { GameScreen(GameMode.DAILY, onBack = { home++ }, viewModel = vm) } }
         compose.onNodeWithText("Daily #1").assertExists()
         compose.onNodeWithTag("banner").assertExists()
-        while (vm.uiState.value.session!!.board.arrows.isNotEmpty()) {
-            vm.tap(vm.uiState.value.session!!.board.freeArrows().first().id)
-        }
+        for (move in (Solver().solve(vm.uiState.value.session!!.board) as Solution.Found).moves) vm.tap(move)
         compose.onRoot().captureToImage()
         compose.onNodeWithText("Home").performClick()
         compose.waitForIdle()

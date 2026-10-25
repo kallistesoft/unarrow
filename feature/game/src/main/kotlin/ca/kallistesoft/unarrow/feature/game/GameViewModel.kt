@@ -43,6 +43,7 @@ class GameViewModel @AssistedInject constructor(
     @Assisted private val mode: GameMode,
     private val progress: ProgressRepository,
     private val today: Today,
+    private val puzzles: Puzzles,
     private val interstitials: InterstitialAds,
     private val rewarded: RewardedAds,
     private val purchases: Purchases,
@@ -90,15 +91,24 @@ class GameViewModel @AssistedInject constructor(
             GameMode.LEVELS -> levelSession(level)
             GameMode.DAILY -> {
                 val day = today()
-                val board = Levels.daily(day).board()
-                GameSession(mode, level, Levels.dailyNumber(day), board, board.arrows.size)
+                withTip(GameSession(mode, level, Levels.dailyNumber(day), puzzles.daily(day), startArrowCount = 0))
             }
         }
     }
 
-    private fun levelSession(level: Int): GameSession {
-        val board = Levels.spec(level).board()
-        return GameSession(GameMode.LEVELS, level, dailyNumber = 0, board, board.arrows.size)
+    private suspend fun levelSession(level: Int): GameSession =
+        withTip(GameSession(GameMode.LEVELS, level, dailyNumber = 0, puzzles.level(level), startArrowCount = 0))
+
+    /** Counts the arrows and adds the tip for a mechanic the player meets for the first time, marking it seen. */
+    private suspend fun withTip(session: GameSession): GameSession {
+        val board = session.board
+        val seen = progress.progress.first().tipsSeen
+        val tip = listOfNotNull(
+            Tip.LOCKS.takeIf { board.arrows.any { it.lock != null } },
+            Tip.ROTATING.takeIf { board.arrows.any { it.rotating } },
+        ).firstOrNull { it.name !in seen }
+        if (tip != null) progress.markTipSeen(tip.name)
+        return session.copy(startArrowCount = board.arrows.size, start = board, tip = tip)
     }
 
     fun tap(arrowId: Int) {
@@ -109,7 +119,8 @@ class GameViewModel @AssistedInject constructor(
                 val next = current.copy(
                     board = result.board,
                     taps = current.taps + 1,
-                    hintId = current.hintId.takeIf { it != arrowId },
+                    hintId = null,
+                    stuck = false,
                     blocked = null,
                     exits = (current.exits + result.arrow).takeLast(EXITS_KEPT),
                 )
@@ -122,16 +133,20 @@ class GameViewModel @AssistedInject constructor(
                     session.value = next
                 }
             }
-            is TapResult.Blocked -> {
+            is TapResult.Slid -> {
                 val lives = current.lives - 1
                 session.value = current.copy(
+                    board = result.board,
                     lives = lives,
                     taps = current.taps + 1,
                     mistakes = current.mistakes + 1,
-                    blocked = BlockedTap(arrowId, result.blocker.id, ++blockedSerial),
+                    hintId = null,
+                    stuck = false,
+                    blocked = BlockedTap(arrowId, result.blocker.id, ++blockedSerial, result.distance),
                     status = if (lives <= 0) GameStatus.LOST else GameStatus.PLAYING,
                 )
             }
+            is TapResult.Locked -> session.value = current.copy(blocked = BlockedTap(arrowId, null, ++blockedSerial))
             TapResult.Missed -> Unit
         }
     }
@@ -146,14 +161,23 @@ class GameViewModel @AssistedInject constructor(
         }
     }
 
-    /** Points at an arrow that can leave now: a hint from the player's stock, or a rewarded ad when there's none. */
+    /**
+     * Points at the next move of a perfect line: a hint from the player's stock, or a rewarded ad when there's none.
+     * When no perfect line is left, says so (free: nothing is spent) so the player can restart.
+     */
     fun hint() {
         val current = session.value ?: return
-        if (current.status != GameStatus.PLAYING || current.hintId != null) return
+        if (current.status != GameStatus.PLAYING || current.hintId != null || current.stuck) return
         viewModelScope.launch {
-            val paid = progress.useHint() || watchRewarded()
-            if (!paid) return@launch
-            session.update { s -> s?.copy(hintId = s.board.freeArrows().firstOrNull()?.id, hintUsed = true) }
+            when (val hint = puzzles.hint(current.board)) {
+                Hint.Stuck -> session.update { s -> s?.copy(stuck = s.board == current.board) }
+                is Hint.Move -> {
+                    val paid = progress.useHint() || watchRewarded()
+                    if (!paid) return@launch
+                    // Only if the board didn't change meanwhile: a hint is for one position.
+                    session.update { s -> if (s?.board == current.board) s.copy(hintId = hint.arrowId, hintUsed = true) else s }
+                }
+            }
         }
     }
 
@@ -169,13 +193,10 @@ class GameViewModel @AssistedInject constructor(
     /** The same puzzle from the start. */
     fun restart() {
         val current = session.value ?: return
-        session.value = when (current.mode) {
-            GameMode.LEVELS -> levelSession(current.level)
-            GameMode.DAILY -> {
-                val board = Levels.daily(today()).board()
-                GameSession(GameMode.DAILY, current.level, current.dailyNumber, board, board.arrows.size)
-            }
-        }
+        session.value = GameSession(
+            current.mode, current.level, current.dailyNumber, current.start, current.start.arrows.size, start = current.start,
+            tip = current.tip, // Kept, so the board doesn't jump.
+        )
     }
 
     /** The screen is on (resumed): the clock runs, a second at a time, while the puzzle is played. */
@@ -211,6 +232,7 @@ class GameViewModel @AssistedInject constructor(
         if (current.status != GameStatus.WON || current.mode != GameMode.LEVELS) return
         viewModelScope.launch {
             interstitials.showAfterPuzzle(current.level)
+            session.value = null // The spinner while the next board is made.
             session.value = levelSession(current.level + 1)
         }
     }

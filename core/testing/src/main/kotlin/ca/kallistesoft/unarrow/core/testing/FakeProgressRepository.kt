@@ -47,4 +47,8 @@ class FakeProgressRepository(initial: GameProgress = GameProgress(), var today: 
     override suspend fun setRemoveAdsOwned(owned: Boolean) {
         state.value = state.value.copy(removeAdsOwned = owned)
     }
+
+    override suspend fun markTipSeen(tip: String) {
+        state.value = state.value.copy(tipsSeen = state.value.tipsSeen + tip)
+    }
 }

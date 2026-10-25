@@ -17,7 +17,10 @@ class BoardTest {
     @Test
     fun `an arrow with another one on its path is blocked by the nearest`() {
         assertEquals(up, board.blockerOf(left))
-        assertEquals(TapResult.Blocked(left, up), board.tap(left.id))
+        val slid = board.tap(left.id) as TapResult.Slid
+        assertEquals("already touching: it doesn't move", 0, slid.distance)
+        assertEquals(up, slid.blocker)
+        assertEquals(left, slid.moved)
     }
 
     @Test
@@ -41,6 +44,57 @@ class BoardTest {
         assertEquals(0, Board(1, 1, emptyList()).rounds())
         val facing = Board(1, 2, listOf(Arrow(0, 0, 0, Direction.RIGHT), Arrow(1, 0, 1, Direction.LEFT)))
         assertEquals(-1, facing.rounds())
+    }
+
+    @Test
+    fun `a blocked arrow slides up to its blocker`() {
+        // → . . ↓   the → slides two cells, next to the ↓.
+        val right = Arrow(0, 0, 0, Direction.RIGHT)
+        val down = Arrow(1, 0, 3, Direction.DOWN)
+        val slid = Board(2, 4, listOf(right, down)).tap(right.id) as TapResult.Slid
+        assertEquals(2, slid.distance)
+        assertEquals(down, slid.blocker)
+        assertEquals(right.copy(col = 2), slid.moved)
+        assertEquals(right.copy(col = 2), slid.board.arrowAt(0, 2))
+        assertNull(slid.board.arrowAt(0, 0))
+    }
+
+    @Test
+    fun `rotating arrows turn a quarter after each exit or slide, not after a locked tap`() {
+        val spinner = Arrow(0, 1, 1, Direction.UP, rotating = true)
+        val free = Arrow(1, 0, 0, Direction.UP)
+        val stuck = Arrow(2, 2, 0, Direction.RIGHT)
+        val locked = Arrow(3, 2, 2, Direction.DOWN, lock = 0)
+        val key = Arrow(4, 0, 2, Direction.RIGHT, key = 0)
+        val start = Board(3, 3, listOf(spinner, free, stuck, locked, key))
+        assertEquals(TapResult.Locked(locked), start.tap(locked.id))
+
+        val afterExit = (start.tap(free.id) as TapResult.Exited).board
+        assertEquals(Direction.RIGHT, afterExit.arrowAt(1, 1)!!.direction)
+        val afterSlide = (afterExit.tap(stuck.id) as TapResult.Slid).board
+        assertEquals(Direction.DOWN, afterSlide.arrowAt(1, 1)!!.direction)
+        assertEquals("plain arrows keep their direction", Direction.RIGHT, afterSlide.arrowAt(2, 1)!!.direction)
+        assertEquals(Direction.LEFT, Direction.DOWN.clockwise)
+        assertEquals(Direction.LEFT, Direction.UP.turned(-1))
+        assertEquals(Direction.UP, Direction.UP.turned(8))
+    }
+
+    @Test
+    fun `a locked arrow opens once its key has left`() {
+        val locked = Arrow(0, 0, 0, Direction.UP, lock = 1)
+        val key = Arrow(1, 1, 1, Direction.DOWN, key = 1)
+        val other = Arrow(2, 1, 0, Direction.LEFT, lock = 2) // no key on the board: open
+        val board = Board(2, 2, listOf(locked, key, other))
+        assertTrue(board.isLocked(locked))
+        assertFalse(board.canExit(locked))
+        assertFalse(board.isLocked(other))
+        assertEquals(listOf(key, other), board.freeArrows())
+        assertTrue(board.hasMechanics)
+        assertFalse(Board(1, 1, listOf(Arrow(0, 0, 0, Direction.UP))).hasMechanics)
+
+        val opened = (board.tap(key.id) as TapResult.Exited).board
+        assertFalse(opened.isLocked(locked))
+        assertTrue(opened.tap(locked.id) is TapResult.Exited)
     }
 
     @Test

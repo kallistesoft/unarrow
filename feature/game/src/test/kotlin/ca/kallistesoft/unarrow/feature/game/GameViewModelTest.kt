@@ -12,7 +12,12 @@ import ca.kallistesoft.unarrow.core.testing.FakeProgressRepository
 import ca.kallistesoft.unarrow.core.testing.FakePurchases
 import ca.kallistesoft.unarrow.core.testing.MainDispatcherRule
 import ca.kallistesoft.unarrow.core.testing.collecting
+import ca.kallistesoft.unarrow.core.game.Arrow
+import ca.kallistesoft.unarrow.core.game.Direction
+import ca.kallistesoft.unarrow.core.game.Solution
+import ca.kallistesoft.unarrow.core.game.Solver
 import kotlinx.coroutines.CompletableDeferred
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.test.TestScope
 import kotlinx.coroutines.test.runTest
 import org.junit.Assert.assertEquals
@@ -32,19 +37,28 @@ class GameViewModelTest {
     private val purchases = FakePurchases()
     private val engagement = FakeEngagement()
 
-    private fun TestScope.viewModel(mode: GameMode = GameMode.LEVELS) =
-        GameViewModel(mode, progress, { today }, ads, ads, purchases, engagement, engagement, ads).also {
+    private fun TestScope.viewModel(mode: GameMode = GameMode.LEVELS, puzzles: Puzzles = Puzzles(Dispatchers.Unconfined)) =
+        GameViewModel(mode, progress, { today }, puzzles, ads, ads, purchases, engagement, engagement, ads).also {
             collecting(it.uiState)
         }
 
     private val GameViewModel.session get() = uiState.value.session!!
 
-    /** Taps free arrows until the board is clear. */
+    /** Plays a perfect line from the current position. */
     private fun GameViewModel.solve() {
-        while (!session.board.isCleared) tap(session.board.freeArrows().first().id)
+        for (move in (Solver().solve(session.board) as Solution.Found).moves) tap(move)
     }
 
-    private fun Board.blockedArrow() = arrows.first { !canExit(it) }
+    /** An arrow that slides when tapped (blocked, not locked). */
+    private fun Board.blockedArrow() = arrows.first { !canExit(it) && !isLocked(it) }
+
+    // → . ↓   a perfect line exists (↑, ←, ↓, →), but sliding the → onto the ↑'s path leaves none.
+    // . ↑ ←
+    private val right = Arrow(0, 0, 0, Direction.RIGHT)
+    private val trap = Board(
+        2, 3,
+        listOf(right, Arrow(1, 0, 2, Direction.DOWN), Arrow(2, 1, 2, Direction.LEFT), Arrow(3, 1, 1, Direction.UP)),
+    )
 
     @Test
     fun `the player's level is set up when the screen opens`() = runTest {
@@ -266,5 +280,54 @@ class GameViewModelTest {
 
         vm.restart()
         assertEquals("a restart starts the clock and mistakes again", 0 to 0, vm.session.seconds to vm.session.mistakes)
+    }
+
+    @Test
+    fun `a slide moves the arrow and costs a life, a locked tap costs nothing`() = runTest {
+        val vm = viewModel(GameMode.DAILY)
+        val board = vm.session.board
+        val locked = board.arrows.first { board.isLocked(it) }
+        vm.tap(locked.id)
+        assertEquals(MAX_LIVES, vm.session.lives)
+        assertEquals(board, vm.session.board)
+        assertEquals(locked.id, vm.session.blocked?.arrowId)
+        assertNull(vm.session.blocked?.blockerId)
+        assertEquals(0, vm.session.mistakes)
+
+        val stuck = board.blockedArrow()
+        vm.tap(stuck.id)
+        assertEquals(MAX_LIVES - 1, vm.session.lives)
+        assertEquals(1, vm.session.mistakes)
+        assertTrue(vm.session.board != board)
+    }
+
+    @Test
+    fun `a hint after a trap says no perfect line is left, for free, and restart sets the board back`() = runTest {
+        val vm = viewModel(puzzles = Puzzles(Dispatchers.Unconfined, levelBoard = { trap }))
+        vm.tap(right.id) // slides onto the ↑'s path
+        vm.hint()
+        assertTrue(vm.session.stuck)
+        assertNull(vm.session.hintId)
+        assertEquals(GameProgress.STARTING_HINTS, progress.state.value.hints)
+        vm.hint() // already said
+        assertEquals(GameProgress.STARTING_HINTS, progress.state.value.hints)
+
+        vm.restart()
+        assertEquals(trap, vm.session.board)
+        assertEquals(MAX_LIVES, vm.session.lives)
+        assertTrue(!vm.session.stuck)
+        vm.hint()
+        assertEquals("the ↑ goes first", 3, vm.session.hintId)
+    }
+
+    @Test
+    fun `tips show once, the first time a mechanic appears`() = runTest {
+        val first = viewModel(GameMode.DAILY)
+        assertEquals(Tip.LOCKS, first.session.tip)
+        assertEquals(setOf("LOCKS"), progress.state.value.tipsSeen)
+        val second = viewModel(GameMode.DAILY)
+        assertEquals(Tip.ROTATING, second.session.tip)
+        assertNull(viewModel(GameMode.DAILY).session.tip)
+        assertNull("plain boards have no tip", viewModel().session.tip)
     }
 }

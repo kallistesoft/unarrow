@@ -53,7 +53,7 @@
     <string name="game_home">Accueil</string>
     <string name="game_share">Partager</string>
     <string name="game_lost">Plus de vies</string>
-    <string name="game_lost_body">Touchez seulement les flèches dont le chemin vers le bord est libre.</string>
+    <string name="game_lost_body">Une flèche bloquée glisse et coûte une vie. Regardez avant de toucher.</string>
     <string name="game_retry">Réessayer</string>
     <string name="game_extra_life">Regarder une pub : +1 vie</string>
     <string name="game_get_hints">Obtenir 10 indices</string>
@@ -66,7 +66,16 @@
     </plurals>
     <string name="game_best">Meilleur : %1$s</string>
     <string name="game_target">3 étoiles : aucune erreur, en moins de %1$s</string>
-    <string name="game_tutorial">Touchez une flèche pour la faire glisser. Elle ne sort que si rien ne lui barre la route.</string>
+    <string name="game_tutorial">Touchez une flèche pour la faire sortir. Si une autre flèche lui barre la route, elle glisse jusqu’à elle et vous perdez une vie.</string>
+    <string name="game_tip_locks">Une flèche cadenassée ne bouge pas tant que la clé de sa couleur n’a pas quitté le plateau.</string>
+    <string name="game_tip_rotating">Les flèches marquées ↻ tournent d’un quart de tour vers la droite après chacun de vos coups.</string>
+    <string name="game_stuck">Plus de solution parfaite d’ici. Recommencez pour réessayer.</string>
+    <string name="game_arrow_rotating">%1$s, tournante</string>
+    <string name="game_arrow_locked">%1$s, cadenas %2$s</string>
+    <string name="game_arrow_key">%1$s, clé du cadenas %2$s</string>
+    <string name="lock_colour_0">orange</string>
+    <string name="lock_colour_1">bleu</string>
+    <string name="lock_colour_2">rose</string>
 
     <!-- Partage -->
     <string name="share_level">J’ai réussi le niveau %1$d d’Unarrow %2$s</string>

@@ -49,6 +49,9 @@ interface ProgressRepository {
     suspend fun markReviewPrompted()
 
     suspend fun setRemoveAdsOwned(owned: Boolean)
+
+    /** The tip [tip] was shown: it won't show again. */
+    suspend fun markTipSeen(tip: String)
 }
 
 @Singleton
@@ -96,6 +99,10 @@ internal class DataStoreProgressRepository @Inject constructor(
 
     override suspend fun setRemoveAdsOwned(owned: Boolean) {
         store.updateData { it.copy(removeAdsOwned = owned) }
+    }
+
+    override suspend fun markTipSeen(tip: String) {
+        store.updateData { it.copy(tipsSeen = it.tipsSeen + tip) }
     }
 }
 

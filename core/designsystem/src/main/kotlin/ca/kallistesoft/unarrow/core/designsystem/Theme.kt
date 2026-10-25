@@ -29,6 +29,11 @@ data class GameColors(
     val streak: Color,
     /** Stars earned on a solved puzzle. */
     val star: Color,
+    /**
+     * Lock and key colours (orange, blue, pink: told apart with colour-blind vision too, and each also has its own
+     * shape on the board).
+     */
+    val locks: List<Color>,
 )
 
 private val LightGame = GameColors(
@@ -39,6 +44,7 @@ private val LightGame = GameColors(
     life = Color(0xFFE5484D),
     streak = Color(0xFFF2711C),
     star = Color(0xFFE8A200),
+    locks = listOf(Color(0xFFD98200), Color(0xFF0072B2), Color(0xFFCC79A7)),
 )
 private val DarkGame = GameColors(
     arrow = Color(0xFFECEDF2),
@@ -48,6 +54,7 @@ private val DarkGame = GameColors(
     life = Color(0xFFFF6B6B),
     streak = Color(0xFFFF8A3D),
     star = Color(0xFFFFC233),
+    locks = listOf(Color(0xFFF5B041), Color(0xFF56B4E9), Color(0xFFE39BC4)),
 )
 
 private val LightColors = lightColorScheme(

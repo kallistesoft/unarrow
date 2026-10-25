@@ -153,12 +153,20 @@ private fun BoxScope.PlayArea(state: GameUiState, session: GameSession, actions:
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.spacedBy(Spacing.l),
     ) {
-        if (session.mode == GameMode.LEVELS && session.level <= TUTORIAL_LEVELS) {
+        val note = when {
+            session.stuck -> R.string.game_stuck
+            session.tip == Tip.LOCKS -> R.string.game_tip_locks
+            session.tip == Tip.ROTATING -> R.string.game_tip_rotating
+            session.mode == GameMode.LEVELS && session.level <= TUTORIAL_LEVELS -> R.string.game_tutorial
+            else -> null
+        }
+        if (note != null) {
             Text(
-                stringResource(R.string.game_tutorial),
+                stringResource(note),
                 style = MaterialTheme.typography.bodyLarge,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                color = if (session.stuck) MaterialTheme.colorScheme.error else MaterialTheme.colorScheme.onSurfaceVariant,
                 textAlign = TextAlign.Center,
+                modifier = Modifier.testTag("note"),
             )
         }
         Box(Modifier.weight(1f).fillMaxWidth(), contentAlignment = Alignment.Center) {

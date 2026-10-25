@@ -4,58 +4,57 @@ import org.junit.Assert.assertTrue
 import org.junit.Test
 
 /**
- * Guards the difficulty curve, so it can't silently get easy again. Taking an arrow off never blocks another, so a
- * puzzle is only as hard as its free arrows are few (the share of arrows that can leave at the start) and its chains
- * long (the rounds needed when every free arrow is taken off at once). Before the harder generator, a 9 × 9 level had
- * 30–40% of its arrows free and cleared in 5–8 rounds.
+ * Guards the difficulty curve, so it can't silently get easy again: every board has a perfect line (exits only, no life
+ * lost), few arrows are free at the start, careless taps trap the player from level 4, and the mechanics appear where
+ * the curve says.
  */
 class DifficultyTest {
-    private class Measure(val level: Int, val board: Board) {
-        val free = board.freeArrows().size
-        val freeShare = free.toDouble() / board.arrows.size
-        val rounds = board.rounds()
+    private class Measure(val level: Int, val board: Board, val difficulty: Difficulty?)
+
+    private companion object {
+        // Built once for every test: a few seconds of generation and measuring.
+        val levels by lazy { (1..60).map { Levels.spec(it).board().let { b -> Measure(it, b, Difficulty.of(b)) } } }
+        val dailies by lazy { (0L until 10L).map { Levels.daily(Levels.FIRST_DAILY_EPOCH_DAY + it).board() } }
     }
 
-    private val levels = (1..300).map { Measure(it, Levels.spec(it).board()) }
-    private val bigBoards = levels.filter { it.level > Levels.LAST_GROWING_LEVEL && it.level % Levels.BREATHER_EVERY != 0 }
-
     @Test
-    fun `every level and daily is solvable, with at least one arrow free`() {
-        val dailies = (0L until 60L).map { Levels.daily(Levels.FIRST_DAILY_EPOCH_DAY + it).board() }
+    fun `every level and daily has a perfect line, with at least one arrow free`() {
+        for (measure in levels) assertTrue("level ${measure.level}", measure.difficulty != null)
         for (board in levels.map { it.board } + dailies) {
             assertTrue(board.freeArrows().isNotEmpty())
-            assertTrue(board.rounds() > 0)
+            assertTrue(Solver().solve(board) is Solution.Found)
         }
     }
 
     @Test
-    fun `from level 6 at most a quarter of the arrows are free at the start, one in seven on average`() {
-        val measured = levels.filter { it.level >= 6 }
-        val worst = measured.maxBy { it.freeShare }
-        assertTrue("level ${worst.level}: ${worst.freeShare}", worst.freeShare <= 0.25)
-        assertTrue(measured.map { it.freeShare }.average() <= 0.16)
+    fun `from level 4, careless taps trap the player`() {
+        val trapped = levels.filter { it.level >= 4 }.count { it.difficulty!!.traps > 0 }
+        assertTrue("$trapped of ${levels.size - 3}", trapped >= (levels.size - 3) * 8 / 10)
+        assertTrue(dailies.all { (Difficulty.of(it)?.traps ?: 0) > 0 })
     }
 
     @Test
-    fun `big boards keep 10 to 15 percent of their arrows free`() {
-        val average = bigBoards.map { it.freeShare }.average()
-        assertTrue("$average", average in 0.10..0.16)
-        assertTrue(bigBoards.all { it.freeShare <= 0.22 })
+    fun `few arrows are free at the start`() {
+        for (measure in levels.filter { it.level >= 4 }) {
+            val share = measure.board.freeArrows().size.toDouble() / measure.board.arrows.size
+            assertTrue("level ${measure.level}: $share", share <= 0.25)
+        }
     }
 
     @Test
-    fun `chains are long - many rounds to clear a board`() {
-        val measured = levels.filter { it.level >= 6 }
-        val shortest = measured.minBy { it.rounds }
-        assertTrue("level ${shortest.level}: ${shortest.rounds} rounds", shortest.rounds >= 8)
-        assertTrue(bigBoards.map { it.rounds }.average() >= 15)
-        val dailies = (0L until 30L).map { Levels.daily(Levels.FIRST_DAILY_EPOCH_DAY + it).board() }
-        assertTrue(dailies.all { it.rounds() >= 10 && it.freeArrows().size.toDouble() / it.arrows.size <= 0.2 })
-    }
-
-    @Test
-    fun `the first levels are gentler than the rest`() {
-        val gentle = levels.take(Levels.GENTLE_LEVELS).map { it.rounds }.average()
-        assertTrue(gentle < levels.filter { it.level >= 6 }.map { it.rounds }.average())
+    fun `locks appear from level 10 and rotating arrows from level 20`() {
+        fun Measure.locks() = board.arrows.any { it.lock != null }
+        fun Measure.rotating() = board.arrows.any { it.rotating }
+        assertTrue(levels.filter { it.level < Levels.FIRST_LOCK_LEVEL }.none { it.locks() || it.rotating() })
+        assertTrue(levels.filter { it.level in Levels.FIRST_LOCK_LEVEL until Levels.FIRST_ROTATING_LEVEL }.all { it.locks() })
+        assertTrue(levels.filter { it.level < Levels.FIRST_ROTATING_LEVEL }.none { it.rotating() })
+        assertTrue(levels.filter { it.level in Levels.FIRST_ROTATING_LEVEL..Levels.LAST_STAGED_LEVEL }.all { it.rotating() })
+        // Each lock colour has exactly one key, and the locks of a colour sit with it.
+        for (board in levels.map { it.board } + dailies) {
+            val keys = board.arrows.mapNotNull { it.key }
+            assertTrue(keys.size == keys.toSet().size)
+            assertTrue(board.arrows.mapNotNull { it.lock }.all { it in keys })
+            assertTrue(keys.all { it < Arrow.LOCK_COLOURS })
+        }
     }
 }

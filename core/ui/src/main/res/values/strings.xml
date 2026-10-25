@@ -48,7 +48,7 @@
     <string name="game_home">Home</string>
     <string name="game_share">Share</string>
     <string name="game_lost">Out of lives</string>
-    <string name="game_lost_body">Tap only the arrows with a clear path to the edge.</string>
+    <string name="game_lost_body">A blocked arrow slides and costs a life. Look before you tap.</string>
     <string name="game_retry">Try again</string>
     <string name="game_extra_life">Watch an ad: +1 life</string>
     <string name="game_get_hints">Get 10 hints</string>
@@ -60,7 +60,16 @@
     </plurals>
     <string name="game_best">Best: %1$s</string>
     <string name="game_target">3 stars: no mistakes, under %1$s</string>
-    <string name="game_tutorial">Tap an arrow to slide it out. It only leaves if nothing is in its way.</string>
+    <string name="game_tutorial">Tap an arrow to send it off the board. If another arrow is in its way, it slides up to it and you lose a life.</string>
+    <string name="game_tip_locks">Locked arrows can’t move until the key of their colour has left the board.</string>
+    <string name="game_tip_rotating">Arrows marked ↻ turn a quarter clockwise after each of your moves.</string>
+    <string name="game_stuck">No perfect way out from here. Restart to try again.</string>
+    <string name="game_arrow_rotating">%1$s, turning</string>
+    <string name="game_arrow_locked">%1$s, %2$s lock</string>
+    <string name="game_arrow_key">%1$s, %2$s key</string>
+    <string name="lock_colour_0">orange</string>
+    <string name="lock_colour_1">blue</string>
+    <string name="lock_colour_2">pink</string>
 
     <!-- Sharing -->
     <string name="share_level">I solved Unarrow level %1$d %2$s</string>

@@ -23,6 +23,8 @@ data class GameProgress(
     val levelStars: Map<Int, Int> = emptyMap(),
     /** The best daily puzzle ever solved: the most stars, then the fastest. */
     val bestDaily: DailyResult? = null,
+    /** The tips already shown (a mechanic's name), each shown once. */
+    val tipsSeen: Set<String> = emptySet(),
 ) {
     fun dailyDone(today: Long): Boolean = lastDailyDay == today
 
