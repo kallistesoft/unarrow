@@ -22,20 +22,27 @@ val keystoreProperties = Properties().apply {
 
 fun signingValue(key: String, env: String): String? = keystoreProperties.getProperty(key) ?: System.getenv(env)
 
-// AdMob IDs (PROGRESS.md, "Needs you at release"). Public identifiers, not secrets. Until the Unarrow app exists in
-// AdMob, every build uses Google's sample IDs, which serve test ads only: replace admobRelease's values then.
+// AdMob IDs (PROGRESS.md, "Needs you at release"). Public identifiers, not secrets. Release builds use the Unarrow app's
+// units; debug builds use Google's sample IDs, which serve test ads only (never click real ads while developing).
 val admobTest = mapOf(
     "appId" to "ca-app-pub-3940256099942544~3347511713",
     "interstitial" to "ca-app-pub-3940256099942544/1033173712",
     "rewarded" to "ca-app-pub-3940256099942544/5224354917",
+    "banner" to "ca-app-pub-3940256099942544/6300978111",
 )
-val admobRelease = admobTest
+val admobRelease = mapOf(
+    "appId" to "ca-app-pub-7557144664039757~7253132965",
+    "interstitial" to "ca-app-pub-7557144664039757/5991936465",
+    "rewarded" to "ca-app-pub-7557144664039757/9739609786",
+    "banner" to "ca-app-pub-7557144664039757/4327501007",
+)
 
 /** The AdMob App ID goes in the manifest (`${admobAppId}`), the ad units in BuildConfig. */
 fun com.android.build.api.dsl.ApplicationBuildType.admob(ids: Map<String, String>) {
     manifestPlaceholders["admobAppId"] = ids.getValue("appId")
     buildConfigField("String", "ADMOB_INTERSTITIAL_ID", "\"${ids.getValue("interstitial")}\"")
     buildConfigField("String", "ADMOB_REWARDED_ID", "\"${ids.getValue("rewarded")}\"")
+    buildConfigField("String", "ADMOB_BANNER_ID", "\"${ids.getValue("banner")}\"")
 }
 
 android {
