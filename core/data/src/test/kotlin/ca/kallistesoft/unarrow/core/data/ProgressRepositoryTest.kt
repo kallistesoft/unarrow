@@ -65,6 +65,14 @@ class ProgressRepositoryTest {
     }
 
     @Test
+    fun `the theme follows the system until one is picked`() = runTest {
+        val repo = repository()
+        assertEquals(AppTheme.SYSTEM, repo.progress.first().theme)
+        repo.setTheme(AppTheme.DARK)
+        assertEquals(AppTheme.DARK, repo.progress.first().theme)
+    }
+
+    @Test
     fun `tips are remembered once shown`() = runTest {
         val repo = repository()
         repo.markTipSeen("LOCKS")

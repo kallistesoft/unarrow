@@ -64,3 +64,10 @@ older installs show a blocking "Update required" screen (Play's immediate update
 
 Until the AdMob app exists, every build uses Google's test ad units (`app/build.gradle.kts`, `admobRelease`). The
 products `remove_ads` and `hints_10` must exist in Play Console; until then nothing is shown for sale.
+
+## Credits
+
+- Look: Kallistesoft's "Nocturne" theme (kallistesoft.ca), shared by the studio's apps.
+- Fonts, bundled in `core/designsystem/src/main/res/font`: [Manrope](https://github.com/googlefonts/manrope) and
+  [JetBrains Mono](https://github.com/JetBrains/JetBrainsMono), both under the SIL Open Font License 1.1 (licence texts
+  in `core/designsystem/src/main/font-licenses`).

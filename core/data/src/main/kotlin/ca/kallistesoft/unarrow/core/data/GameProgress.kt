@@ -25,6 +25,8 @@ data class GameProgress(
     val bestDaily: DailyResult? = null,
     /** The tips already shown (a mechanic's name), each shown once. */
     val tipsSeen: Set<String> = emptySet(),
+    /** Light or dark look, or the system's (Settings › Theme). */
+    val theme: AppTheme = AppTheme.SYSTEM,
 ) {
     fun dailyDone(today: Long): Boolean = lastDailyDay == today
 
@@ -36,6 +38,10 @@ data class GameProgress(
         const val STARTING_HINTS = 3
     }
 }
+
+/** The look chosen in Settings: the system's light or dark, or one of them always. */
+@Serializable
+enum class AppTheme { SYSTEM, LIGHT, DARK }
 
 /** A solved daily puzzle: its stars (1 to 3) and the time it took, in seconds. */
 @Serializable

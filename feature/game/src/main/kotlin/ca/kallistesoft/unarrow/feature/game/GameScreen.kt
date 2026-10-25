@@ -3,6 +3,7 @@ package ca.kallistesoft.unarrow.feature.game
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.slideInVertically
 import androidx.compose.foundation.background
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxScope
@@ -51,6 +52,8 @@ import androidx.lifecycle.compose.LifecycleResumeEffect
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import ca.kallistesoft.unarrow.core.data.DailyResult
 import ca.kallistesoft.unarrow.core.designsystem.PreviewSurface
+import ca.kallistesoft.unarrow.core.designsystem.Chip
+import ca.kallistesoft.unarrow.core.designsystem.MonoLabel
 import ca.kallistesoft.unarrow.core.designsystem.PrimaryButton
 import ca.kallistesoft.unarrow.core.designsystem.SecondaryButton
 import ca.kallistesoft.unarrow.core.designsystem.Sizes
@@ -186,7 +189,15 @@ private fun BoxScope.PlayArea(state: GameUiState, session: GameSession, actions:
             )
         }
         Box(Modifier.weight(1f).fillMaxWidth(), contentAlignment = Alignment.Center) {
-            BoardView(session, actions.onTap, Modifier.widthIn(max = Sizes.maxContentWidth).fillMaxWidth())
+            // The board sits on a card, like the game mock-ups on kallistesoft.ca.
+            Surface(
+                Modifier.widthIn(max = Sizes.maxContentWidth).fillMaxWidth(),
+                shape = MaterialTheme.shapes.large,
+                color = MaterialTheme.colorScheme.surfaceContainer,
+                border = BorderStroke(Sizes.border, UnarrowTheme.brand.cardBorder),
+            ) {
+                BoardView(session, actions.onTap, Modifier.padding(Spacing.s).fillMaxWidth())
+            }
         }
         Row(
             Modifier.widthIn(max = Sizes.maxContentWidth).fillMaxWidth(),
@@ -236,7 +247,7 @@ private fun GameTopBar(session: GameSession?, onBack: () -> Unit) {
             val label = stringResource(R.string.game_time_label, time)
             Text(
                 time,
-                style = MaterialTheme.typography.labelLarge,
+                style = MonoLabel,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
                 modifier = Modifier
                     .padding(end = Spacing.m)
@@ -297,11 +308,13 @@ private fun HintButton(state: GameUiState, actions: GameActions, modifier: Modif
 @Composable
 private fun ResultPanel(state: GameUiState, actions: GameActions) {
     val session = state.session ?: return
+    // A card as on kallistesoft.ca: surface, 1 px border, the site's large corners and a soft shadow.
     Surface(
         Modifier.widthIn(max = Sizes.maxContentWidth).fillMaxWidth().testTag("result"),
         shape = MaterialTheme.shapes.extraLarge,
-        tonalElevation = Spacing.s,
-        shadowElevation = Spacing.s,
+        color = MaterialTheme.colorScheme.surfaceContainer,
+        border = BorderStroke(Sizes.border, UnarrowTheme.brand.cardBorder),
+        shadowElevation = Spacing.m,
     ) {
         Column(
             Modifier.padding(Spacing.xl),
@@ -313,17 +326,12 @@ private fun ResultPanel(state: GameUiState, actions: GameActions) {
                 StarRow(session.stars)
                 Text(
                     timeText(session.seconds) + " · " + pluralStringResource(R.plurals.game_taps, session.taps, session.taps),
-                    style = MaterialTheme.typography.bodyLarge,
+                    style = MonoLabel,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                 )
                 Best(state, session)
                 if (session.stars < Stars.MAX) {
-                    Text(
-                        stringResource(R.string.game_target, timeText(Stars.targetSeconds(session.startArrowCount))),
-                        style = MaterialTheme.typography.bodyMedium,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant,
-                        textAlign = TextAlign.Center,
-                    )
+                    Chip(stringResource(R.string.game_target, timeText(Stars.targetSeconds(session.startArrowCount))))
                 }
                 if (session.mode == GameMode.LEVELS) {
                     PrimaryButton(stringResource(R.string.game_next), onClick = actions.onNext)
@@ -415,11 +423,7 @@ private fun Best(state: GameUiState, session: GameSession) {
             bestDailyText(state.bestDaily)
         else -> return
     }
-    Text(
-        stringResource(R.string.game_best, best),
-        style = MaterialTheme.typography.titleSmall,
-        modifier = Modifier.testTag("best"),
-    )
+    Chip(stringResource(R.string.game_best, best), Modifier.testTag("best"))
 }
 
 @Composable

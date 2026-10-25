@@ -19,8 +19,6 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.rounded.CheckCircle
 import androidx.compose.material.icons.rounded.LocalFireDepartment
 import androidx.compose.material.icons.rounded.Settings
-import androidx.compose.material3.Card
-import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
@@ -33,9 +31,11 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.text.font.FontWeight
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import ca.kallistesoft.unarrow.core.designsystem.BrandCard
+import ca.kallistesoft.unarrow.core.designsystem.Chip
+import ca.kallistesoft.unarrow.core.designsystem.MonoLabel
 import ca.kallistesoft.unarrow.core.designsystem.PreviewSurface
 import ca.kallistesoft.unarrow.core.designsystem.PrimaryButton
 import ca.kallistesoft.unarrow.core.designsystem.SecondaryButton
@@ -94,10 +94,11 @@ internal fun HomeContent(
                     }
                 }
                 Text(
-                    stringResource(R.string.app_name),
-                    style = MaterialTheme.typography.displayMedium,
-                    fontWeight = FontWeight.Bold,
+                    stringResource(R.string.studio).uppercase(),
+                    style = MonoLabel,
+                    color = UnarrowTheme.brand.accentText,
                 )
+                Text(stringResource(R.string.app_name), style = MaterialTheme.typography.displayMedium)
                 Text(
                     stringResource(R.string.tagline),
                     style = MaterialTheme.typography.titleMedium,
@@ -131,21 +132,12 @@ internal fun HomeContent(
 private fun DailyCard(state: HomeUiState, onDaily: () -> Unit, onRetryDaily: () -> Unit) {
     // Once today's daily is solved the card only shows the result: one try per day, so the streak and the best daily
     // can't be replayed.
-    val container = MaterialTheme.colorScheme.surfaceContainerHigh
-    val content = MaterialTheme.colorScheme.onSurface
-    Card(
+    BrandCard(
         onClick = onDaily,
         enabled = !state.loading && !state.dailyDone,
-        shape = MaterialTheme.shapes.large,
-        colors = CardDefaults.cardColors(
-            containerColor = container,
-            contentColor = content,
-            disabledContainerColor = container,
-            disabledContentColor = content,
-        ),
         modifier = Modifier.fillMaxWidth().testTag("daily"),
     ) {
-        Column(Modifier.padding(Spacing.xl), verticalArrangement = Arrangement.spacedBy(Spacing.s)) {
+        Column(verticalArrangement = Arrangement.spacedBy(Spacing.s)) {
             Row(verticalAlignment = Alignment.CenterVertically) {
                 Text(
                     stringResource(R.string.home_daily_number, state.dailyNumber),
@@ -156,7 +148,7 @@ private fun DailyCard(state: HomeUiState, onDaily: () -> Unit, onRetryDaily: () 
                     Icon(
                         Icons.Rounded.CheckCircle,
                         contentDescription = null,
-                        tint = UnarrowTheme.gameColors.hint,
+                        tint = UnarrowTheme.brand.ok,
                     )
                 }
             }
@@ -166,15 +158,12 @@ private fun DailyCard(state: HomeUiState, onDaily: () -> Unit, onRetryDaily: () 
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
             )
             if (state.streak > 0) {
-                Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(Spacing.xs)) {
+                Chip(pluralStringResource(R.plurals.home_streak, state.streak, state.streak)) {
                     Icon(
                         Icons.Rounded.LocalFireDepartment,
                         contentDescription = null,
                         tint = UnarrowTheme.gameColors.streak,
-                    )
-                    Text(
-                        pluralStringResource(R.plurals.home_streak, state.streak, state.streak),
-                        style = MaterialTheme.typography.titleSmall,
+                        modifier = Modifier.size(Sizes.icon),
                     )
                 }
             }

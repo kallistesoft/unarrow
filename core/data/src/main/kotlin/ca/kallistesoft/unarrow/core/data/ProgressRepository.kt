@@ -52,6 +52,8 @@ interface ProgressRepository {
 
     /** The tip [tip] was shown: it won't show again. */
     suspend fun markTipSeen(tip: String)
+
+    suspend fun setTheme(theme: AppTheme)
 }
 
 @Singleton
@@ -103,6 +105,10 @@ internal class DataStoreProgressRepository @Inject constructor(
 
     override suspend fun markTipSeen(tip: String) {
         store.updateData { it.copy(tipsSeen = it.tipsSeen + tip) }
+    }
+
+    override suspend fun setTheme(theme: AppTheme) {
+        store.updateData { it.copy(theme = theme) }
     }
 }
 

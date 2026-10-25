@@ -36,7 +36,7 @@ class ThemeTest {
             UnarrowTheme(darkTheme = true) { dark = UnarrowTheme.gameColors }
         }
         assertNotEquals(light, dark)
-        assertEquals(Color(0xFFF6F4EF), lightBackground)
+        assertEquals(Color(0xFFF6F8FC), lightBackground) // Nocturne's bg
     }
 
     @Test
@@ -77,5 +77,33 @@ class ThemeTest {
             }
         }
         compose.onNodeWithText("Centred").assertExists()
+    }
+
+    @Test
+    fun `the studio's look - accent, Manrope headings, cards, chips and pills`() {
+        var primary = Color.Unspecified
+        var heading: androidx.compose.ui.text.TextStyle? = null
+        var cardTaps = 0
+        compose.setContent {
+            UnarrowTheme(darkTheme = true) {
+                primary = MaterialTheme.colorScheme.primary
+                heading = MaterialTheme.typography.headlineMedium
+                Column {
+                    BrandCard(onClick = { cardTaps++ }) { androidx.compose.material3.Text("Card") }
+                    BrandCard { androidx.compose.material3.Text("Plain card") }
+                    Chip("4-day streak") { androidx.compose.material3.Text("*") }
+                    Chip("Best")
+                    StatusPill("Restored")
+                    androidx.compose.material3.Text("0:42", style = MonoLabel)
+                }
+            }
+        }
+        compose.onNodeWithText("Card").performClick()
+        assertEquals(1, cardTaps)
+        for (text in listOf("Plain card", "4-day streak", "Best", "Restored", "0:42")) compose.onNodeWithText(text).assertExists()
+        assertEquals(Color(0xFF2F6BFF), primary)
+        assertEquals(Manrope, heading!!.fontFamily)
+        assertEquals(androidx.compose.ui.text.font.FontWeight.ExtraBold, heading!!.fontWeight)
+        assertEquals(JetBrainsMono, MonoLabel.fontFamily)
     }
 }

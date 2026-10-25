@@ -2,6 +2,7 @@
 <!-- Français (France). Le Canada reprend ces textes, sauf ceux de values-fr-rCA. -->
 <resources>
     <string name="app_name">Unarrow</string>
+    <string name="studio">Kallistesoft</string>
     <string name="tagline">Faites sortir les flèches.</string>
     <string name="back">Retour</string>
 
@@ -87,6 +88,10 @@
     <!-- Paramètres -->
     <string name="settings_sound">Son</string>
     <string name="settings_haptics">Vibrations</string>
+    <string name="settings_theme">Thème</string>
+    <string name="settings_theme_system">Comme le système</string>
+    <string name="settings_theme_light">Clair</string>
+    <string name="settings_theme_dark">Sombre</string>
     <string name="settings_language">Langue</string>
     <string name="settings_language_system">Langue du système</string>
     <string name="language_en">English</string>

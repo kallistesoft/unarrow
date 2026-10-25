@@ -4,6 +4,7 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.consumeWindowInsets
@@ -20,7 +21,6 @@ import androidx.compose.foundation.selection.toggleable
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.rounded.ArrowBack
-import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
@@ -41,7 +41,12 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.Role
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import ca.kallistesoft.unarrow.core.data.AppTheme
+import ca.kallistesoft.unarrow.core.designsystem.BrandCard
+import ca.kallistesoft.unarrow.core.designsystem.MonoLabel
 import ca.kallistesoft.unarrow.core.designsystem.PreviewSurface
+import ca.kallistesoft.unarrow.core.designsystem.StatusPill
+import ca.kallistesoft.unarrow.core.designsystem.UnarrowTheme
 import ca.kallistesoft.unarrow.core.designsystem.Sizes
 import ca.kallistesoft.unarrow.core.designsystem.Spacing
 import ca.kallistesoft.unarrow.core.designsystem.UnarrowPreviews
@@ -60,6 +65,7 @@ fun SettingsScreen(onBack: () -> Unit, versionName: String, viewModel: SettingsV
             onBack = onBack,
             onSound = viewModel::setSound,
             onHaptics = viewModel::setHaptics,
+            onTheme = viewModel::setTheme,
             onLanguage = {
                 language = it
                 it.select()
@@ -77,6 +83,7 @@ internal data class SettingsActions(
     val onBack: () -> Unit = {},
     val onSound: (Boolean) -> Unit = {},
     val onHaptics: (Boolean) -> Unit = {},
+    val onTheme: (AppTheme) -> Unit = {},
     val onLanguage: (AppLanguage) -> Unit = {},
     val onRestore: () -> Unit = {},
     val onPrivacy: () -> Unit = {},
@@ -113,46 +120,39 @@ internal fun SettingsContent(
                     .fillMaxWidth()
                     .verticalScroll(rememberScrollState())
                     .padding(horizontal = Spacing.screen, vertical = Spacing.m),
-                verticalArrangement = Arrangement.spacedBy(Spacing.xs),
             ) {
-                SwitchRow(stringResource(R.string.settings_sound), state.soundOn, actions.onSound)
-                SwitchRow(stringResource(R.string.settings_haptics), state.hapticsOn, actions.onHaptics)
-                HorizontalDivider(Modifier.padding(vertical = Spacing.s))
+                Section {
+                    SwitchRow(stringResource(R.string.settings_sound), state.soundOn, actions.onSound)
+                    SwitchRow(stringResource(R.string.settings_haptics), state.hapticsOn, actions.onHaptics)
+                }
 
-                SectionTitle(stringResource(R.string.settings_language))
-                for (option in AppLanguage.entries) {
-                    Row(
-                        Modifier
-                            .fillMaxWidth()
-                            .heightIn(min = Sizes.touchTarget)
-                            .selectable(option == language, role = Role.RadioButton) { actions.onLanguage(option) },
-                        verticalAlignment = Alignment.CenterVertically,
-                    ) {
-                        RadioButton(selected = option == language, onClick = null)
-                        Text(
-                            stringResource(option.label),
-                            style = MaterialTheme.typography.bodyLarge,
-                            modifier = Modifier.padding(start = Spacing.m),
-                        )
+                SectionTitle(stringResource(R.string.settings_theme))
+                Section {
+                    for (option in AppTheme.entries) {
+                        RadioRow(stringResource(option.label()), option == state.theme) { actions.onTheme(option) }
                     }
                 }
-                HorizontalDivider(Modifier.padding(vertical = Spacing.s))
+
+                SectionTitle(stringResource(R.string.settings_language))
+                Section {
+                    for (option in AppLanguage.entries) {
+                        RadioRow(stringResource(option.label), option == language) { actions.onLanguage(option) }
+                    }
+                }
 
                 SectionTitle(stringResource(R.string.settings_purchases))
-                LinkRow(stringResource(R.string.settings_restore), actions.onRestore)
-                if (state.restored) {
-                    Text(
-                        stringResource(R.string.settings_restored),
-                        style = MaterialTheme.typography.bodyMedium,
-                        color = MaterialTheme.colorScheme.primary,
-                    )
+                Section {
+                    LinkRow(stringResource(R.string.settings_restore), actions.onRestore)
+                    if (state.restored) {
+                        StatusPill(stringResource(R.string.settings_restored), Modifier.padding(bottom = Spacing.s))
+                    }
+                    if (state.privacyOptionsRequired) LinkRow(stringResource(R.string.settings_privacy), actions.onPrivacy)
+                    LinkRow(stringResource(R.string.settings_rate), actions.onRate)
                 }
-                if (state.privacyOptionsRequired) LinkRow(stringResource(R.string.settings_privacy), actions.onPrivacy)
-                LinkRow(stringResource(R.string.settings_rate), actions.onRate)
                 Text(
                     stringResource(R.string.settings_version, versionName),
-                    style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    style = MonoLabel,
+                    color = UnarrowTheme.brand.muted2,
                     modifier = Modifier.padding(top = Spacing.l),
                 )
             }
@@ -160,13 +160,42 @@ internal fun SettingsContent(
     }
 }
 
+private fun AppTheme.label(): Int = when (this) {
+    AppTheme.SYSTEM -> R.string.settings_theme_system
+    AppTheme.LIGHT -> R.string.settings_theme_light
+    AppTheme.DARK -> R.string.settings_theme_dark
+}
+
+/** A group of rows on a card, as on kallistesoft.ca. */
+@Composable
+private fun Section(content: @Composable () -> Unit) {
+    BrandCard(Modifier.fillMaxWidth(), padding = PaddingValues(horizontal = Spacing.l, vertical = Spacing.xs)) {
+        Column { content() }
+    }
+}
+
+@Composable
+private fun RadioRow(label: String, selected: Boolean, onSelect: () -> Unit) {
+    Row(
+        Modifier
+            .fillMaxWidth()
+            .heightIn(min = Sizes.touchTarget)
+            .selectable(selected, role = Role.RadioButton, onClick = onSelect),
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        RadioButton(selected = selected, onClick = null)
+        Text(label, style = MaterialTheme.typography.bodyLarge, modifier = Modifier.padding(start = Spacing.m))
+    }
+}
+
 @Composable
 private fun SectionTitle(text: String) {
+    // The site's section labels: small, mono, in the accent's text colour.
     Text(
-        text,
-        style = MaterialTheme.typography.titleSmall,
-        color = MaterialTheme.colorScheme.primary,
-        modifier = Modifier.padding(vertical = Spacing.s),
+        text.uppercase(),
+        style = MonoLabel,
+        color = UnarrowTheme.brand.accentText,
+        modifier = Modifier.padding(top = Spacing.l, bottom = Spacing.s),
     )
 }
 

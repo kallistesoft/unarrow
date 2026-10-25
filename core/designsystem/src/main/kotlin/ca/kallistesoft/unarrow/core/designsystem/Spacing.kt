@@ -17,15 +17,23 @@ object Spacing {
 
 /** Component sizes. */
 object Sizes {
+    // The studio site's corners (kallistesoft.ca): chips 6, small buttons 10, buttons 12, cards 18, panels 24.
     val cornerXs = 6.dp
-    val cornerS = 12.dp
-    val cornerM = 16.dp
-    val cornerL = 24.dp
-    val cornerXl = 32.dp
+    val cornerS = 10.dp
+    val cornerM = 12.dp
+    val cornerL = 18.dp
+    val cornerXl = 24.dp
+
+    /** Card and button borders. */
+    val border = 1.dp
+
+    /** The "ok" dot of a status pill. */
+    val dot = 8.dp
 
     val icon = 24.dp
     val iconHero = 72.dp
-    val buttonHeight = 56.dp
+    val buttonHeight = 52.dp
+    val smallButtonHeight = 44.dp
     val touchTarget = 48.dp
 
     /** Widest a board or a column of buttons gets (tablets, landscape). */

@@ -4,6 +4,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import ca.kallistesoft.unarrow.core.ads.AdConsent
 import ca.kallistesoft.unarrow.core.billing.Purchases
+import ca.kallistesoft.unarrow.core.data.AppTheme
 import ca.kallistesoft.unarrow.core.data.ProgressRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -18,6 +19,7 @@ data class SettingsUiState(
     val loading: Boolean = true,
     val soundOn: Boolean = true,
     val hapticsOn: Boolean = true,
+    val theme: AppTheme = AppTheme.SYSTEM,
     val privacyOptionsRequired: Boolean = false,
     /** "Purchases restored" shows once a restore finished. */
     val restored: Boolean = false,
@@ -37,6 +39,7 @@ class SettingsViewModel @Inject constructor(
                 loading = false,
                 soundOn = p.soundOn,
                 hapticsOn = p.hapticsOn,
+                theme = p.theme,
                 privacyOptionsRequired = privacy,
                 restored = restored,
             )
@@ -48,6 +51,10 @@ class SettingsViewModel @Inject constructor(
 
     fun setHaptics(on: Boolean) {
         viewModelScope.launch { progress.setHaptics(on) }
+    }
+
+    fun setTheme(theme: AppTheme) {
+        viewModelScope.launch { progress.setTheme(theme) }
     }
 
     /** Asks Play again for what was bought (new phone, reinstall). */

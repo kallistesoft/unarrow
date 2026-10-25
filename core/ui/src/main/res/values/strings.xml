@@ -1,6 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="app_name">Unarrow</string>
+    <string name="studio">Kallistesoft</string>
     <string name="tagline">Tap the arrows out.</string>
     <string name="back">Back</string>
 
@@ -81,6 +82,10 @@
     <!-- Settings -->
     <string name="settings_sound">Sound</string>
     <string name="settings_haptics">Vibration</string>
+    <string name="settings_theme">Theme</string>
+    <string name="settings_theme_system">Same as the system</string>
+    <string name="settings_theme_light">Light</string>
+    <string name="settings_theme_dark">Dark</string>
     <string name="settings_language">Language</string>
     <string name="settings_language_system">System default</string>
     <string name="language_en">English</string>

@@ -2,7 +2,12 @@ package ca.kallistesoft.unarrow
 
 import android.os.Bundle
 import androidx.activity.compose.setContent
+import androidx.activity.SystemBarStyle
 import androidx.activity.enableEdgeToEdge
+import android.graphics.Color
+import androidx.compose.foundation.isSystemInDarkTheme
+import androidx.compose.runtime.DisposableEffect
+import ca.kallistesoft.unarrow.core.data.AppTheme
 import androidx.activity.viewModels
 import androidx.appcompat.app.AppCompatActivity
 import androidx.compose.runtime.getValue
@@ -34,7 +39,21 @@ class MainActivity : AppCompatActivity() {
         setContent {
             val state by viewModel.uiState.collectAsStateWithLifecycle()
             LifecycleEventEffect(Lifecycle.Event.ON_START) { viewModel.onForeground() }
-            UnarrowTheme {
+            val theme = (state as? MainUiState.Ready)?.theme ?: AppTheme.SYSTEM
+            val dark = when (theme) {
+                AppTheme.SYSTEM -> isSystemInDarkTheme()
+                AppTheme.LIGHT -> false
+                AppTheme.DARK -> true
+            }
+            // System bar icons follow the chosen look, not only the system's.
+            DisposableEffect(dark) {
+                enableEdgeToEdge(
+                    statusBarStyle = SystemBarStyle.auto(Color.TRANSPARENT, Color.TRANSPARENT) { dark },
+                    navigationBarStyle = SystemBarStyle.auto(Color.TRANSPARENT, Color.TRANSPARENT) { dark },
+                )
+                onDispose { }
+            }
+            UnarrowTheme(darkTheme = dark) {
                 when (val ready = state) {
                     MainUiState.Loading -> Unit
                     is MainUiState.Ready ->

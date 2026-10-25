@@ -11,6 +11,7 @@ import androidx.compose.ui.test.getUnclippedBoundsInRoot
 import androidx.compose.ui.test.onRoot
 import androidx.core.os.LocaleListCompat
 import ca.kallistesoft.unarrow.core.ads.AdConsent
+import ca.kallistesoft.unarrow.core.data.AppTheme
 import ca.kallistesoft.unarrow.core.data.GameProgress
 import ca.kallistesoft.unarrow.core.designsystem.UnarrowTheme
 import ca.kallistesoft.unarrow.core.testing.FakeProgressRepository
@@ -67,6 +68,8 @@ class SettingsTest {
         vm.setHaptics(false)
         assertEquals(GameProgress(soundOn = false, hapticsOn = false), progress.state.value)
         assertFalse(vm.uiState.value.soundOn)
+        vm.setTheme(AppTheme.LIGHT)
+        assertEquals(AppTheme.LIGHT, vm.uiState.value.theme)
 
         vm.restorePurchases()
         assertEquals(1, purchases.refreshes)
@@ -87,6 +90,7 @@ class SettingsTest {
                         onBack = { calls += "back" },
                         onSound = { calls += "sound $it" },
                         onHaptics = { calls += "haptics $it" },
+                        onTheme = { calls += "theme $it" },
                         onLanguage = { calls += it.name },
                         onRestore = { calls += "restore" },
                         onPrivacy = { calls += "privacy" },
@@ -99,6 +103,7 @@ class SettingsTest {
         }
         compose.onNodeWithText("Sound").performClick()
         compose.onNodeWithText("Vibration").performClick()
+        compose.onNodeWithText("Dark").performScrollTo().performClick()
         compose.onNodeWithText("Français (Canada)").performScrollTo().performClick()
         compose.onNodeWithText("Restore purchases").performScrollTo().performClick()
         compose.onNodeWithText("Purchases restored").assertExists()
@@ -107,7 +112,7 @@ class SettingsTest {
         compose.onNodeWithText("Version 1.2.3").assertExists()
         compose.onNodeWithContentDescription("Back").performClick()
         assertEquals(
-            listOf("sound false", "haptics false", "FRENCH_CANADA", "restore", "privacy", "rate", "back"),
+            listOf("sound false", "haptics false", "theme DARK", "FRENCH_CANADA", "restore", "privacy", "rate", "back"),
             calls,
         )
     }

@@ -1,5 +1,6 @@
 package ca.kallistesoft.unarrow.core.testing
 
+import ca.kallistesoft.unarrow.core.data.AppTheme
 import ca.kallistesoft.unarrow.core.data.DailyResult
 import ca.kallistesoft.unarrow.core.data.GameProgress
 import ca.kallistesoft.unarrow.core.data.ProgressRepository
@@ -50,5 +51,9 @@ class FakeProgressRepository(initial: GameProgress = GameProgress(), var today: 
 
     override suspend fun markTipSeen(tip: String) {
         state.value = state.value.copy(tipsSeen = state.value.tipsSeen + tip)
+    }
+
+    override suspend fun setTheme(theme: AppTheme) {
+        state.value = state.value.copy(theme = theme)
     }
 }
