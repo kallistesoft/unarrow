@@ -2,6 +2,10 @@ package ca.kallistesoft.unarrow.core.update
 
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.key
+import androidx.compose.runtime.mutableIntStateOf
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.test.junit4.createComposeRule
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
@@ -62,6 +66,34 @@ class FlexibleUpdateTest {
         manager.setUpdateNotAvailable()
         show()
         assertFalse(manager.isConfirmationDialogVisible)
+        compose.onNodeWithText("Restart").assertDoesNotExist()
+    }
+
+    @Test
+    fun `an update already downloaded offers Restart at once`() {
+        manager.setUpdateAvailable(2, AppUpdateType.FLEXIBLE)
+        manager.setClientVersionStalenessDays(STALE_DAYS)
+        var round by mutableIntStateOf(0)
+        val snackbar = SnackbarHostState()
+        compose.setContent {
+            key(round) { FlexibleUpdate(snackbar, manager) }
+            SnackbarHost(snackbar)
+        }
+        compose.waitForIdle()
+        manager.userAcceptsUpdate()
+        manager.downloadStarts()
+        manager.downloadCompletes()
+        compose.waitForIdle()
+        round++ // The app reopened: Play says the update is already downloaded.
+        compose.waitForIdle()
+        compose.onNodeWithText("An update is ready.").assertExists()
+    }
+
+    @Test
+    fun `the real update manager can be asked outside Play`() {
+        val snackbar = SnackbarHostState()
+        compose.setContent { FlexibleUpdate(snackbar) }
+        compose.waitForIdle()
         compose.onNodeWithText("Restart").assertDoesNotExist()
     }
 }

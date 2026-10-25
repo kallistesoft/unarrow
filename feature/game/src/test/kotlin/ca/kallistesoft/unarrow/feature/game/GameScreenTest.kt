@@ -8,11 +8,19 @@ import androidx.compose.ui.test.onAllNodesWithContentDescription
 import androidx.compose.ui.test.onNodeWithContentDescription
 import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.onNodeWithText
+import androidx.compose.ui.test.onRoot
+import androidx.compose.ui.test.captureToImage
 import androidx.compose.ui.test.performClick
 import ca.kallistesoft.unarrow.core.designsystem.UnarrowTheme
 import ca.kallistesoft.unarrow.core.game.Arrow
 import ca.kallistesoft.unarrow.core.game.Board
 import ca.kallistesoft.unarrow.core.game.Direction
+import ca.kallistesoft.unarrow.core.game.Levels
+import ca.kallistesoft.unarrow.core.testing.FakeAds
+import ca.kallistesoft.unarrow.core.testing.FakeEngagement
+import ca.kallistesoft.unarrow.core.testing.FakeProgressRepository
+import ca.kallistesoft.unarrow.core.testing.FakePurchases
+import ca.kallistesoft.unarrow.core.testing.MainDispatcherRule
 import ca.kallistesoft.unarrow.core.testing.ScreenshotDevice
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertTrue
@@ -21,9 +29,11 @@ import org.junit.Test
 import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
 import org.robolectric.annotation.Config
+import org.robolectric.annotation.GraphicsMode
 
 @RunWith(RobolectricTestRunner::class)
 @Config(sdk = [ScreenshotDevice.SDK], qualifiers = ScreenshotDevice.LIGHT_EN)
+@GraphicsMode(GraphicsMode.Mode.NATIVE)
 class GameScreenTest {
     @get:Rule
     val compose = createComposeRule()
@@ -141,7 +151,9 @@ class GameScreenTest {
     fun `blocked taps and exits animate, the tutorial shows on the first levels`() {
         val early = session(blocked = BlockedTap(left.id, right.id, 1), exits = listOf(Arrow(9, 0, 0, Direction.LEFT)))
         show(GameUiState(early.copy(level = 1)))
+        compose.onRoot().captureToImage() // Draws the board: tiles, hint, blocked flash, exits.
         compose.mainClock.advanceTimeBy(1_000)
+        compose.onRoot().captureToImage()
         compose.onNodeWithText("Tap an arrow to slide it out. It only leaves if nothing is in its way.").assertExists()
         compose.onAllNodesWithContentDescription("Arrow pointing", substring = true).fetchSemanticsNodes().let {
             assertEquals(4, it.size)
@@ -193,5 +205,28 @@ class GameScreenTest {
         state = state.copy(session = state.session!!.copy(status = GameStatus.WON), soundOn = false, hapticsOn = false)
         compose.waitForIdle()
         compose.onNodeWithText("Solved!").assertExists()
+    }
+
+    @get:Rule
+    val main = MainDispatcherRule()
+
+    @Test
+    fun `the screen plays a daily with its ViewModel and goes home after the win`() {
+        val ads = FakeAds()
+        val vm = GameViewModel(
+            GameMode.DAILY, FakeProgressRepository(), { Levels.FIRST_DAILY_EPOCH_DAY }, ads, ads, FakePurchases(),
+            FakeEngagement(), FakeEngagement(),
+        )
+        var home = 0
+        compose.setContent { UnarrowTheme { GameScreen(GameMode.DAILY, onBack = { home++ }, viewModel = vm) } }
+        compose.onNodeWithText("Daily #1").assertExists()
+        while (vm.uiState.value.session!!.board.arrows.isNotEmpty()) {
+            vm.tap(vm.uiState.value.session!!.board.freeArrows().first().id)
+        }
+        compose.onRoot().captureToImage()
+        compose.onNodeWithText("Home").performClick()
+        compose.waitForIdle()
+        assertEquals(1, home)
+        assertEquals(listOf(1), ads.interstitialLevels)
     }
 }

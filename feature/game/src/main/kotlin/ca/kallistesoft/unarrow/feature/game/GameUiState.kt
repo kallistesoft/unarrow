@@ -44,9 +44,7 @@ data class GameUiState(
     val hintPackPrice: String? = null,
     val soundOn: Boolean = true,
     val hapticsOn: Boolean = true,
-) {
-    val loading: Boolean get() = session == null
-}
+)
 
 const val MAX_LIVES = 3
 

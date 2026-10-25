@@ -66,4 +66,16 @@ class ThemeTest {
         compose.onNodeWithText("Off").assertIsNotEnabled()
         assertEquals(3, taps)
     }
+
+    @Test
+    fun `a status column and the preview surface show their content`() {
+        compose.setContent {
+            PreviewSurface {
+                androidx.compose.material3.Scaffold { padding ->
+                    StatusColumn(padding) { androidx.compose.material3.Text("Centred") }
+                }
+            }
+        }
+        compose.onNodeWithText("Centred").assertExists()
+    }
 }
