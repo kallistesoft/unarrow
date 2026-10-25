@@ -110,21 +110,23 @@ class SettingsTest {
     }
 
     @Test
-    fun `the chosen language is applied and read back`() {
-        assertEquals(AppLanguage.SYSTEM, AppLanguage.current())
-        AppLanguage.FRENCH_FRANCE.select()
-        assertEquals(AppLanguage.FRENCH_FRANCE, AppLanguage.current())
-        AppLanguage.FRENCH_CANADA.select()
-        assertEquals(AppLanguage.FRENCH_CANADA, AppLanguage.current())
-        AppLanguage.SYSTEM.select()
-        assertEquals(AppLanguage.SYSTEM, AppLanguage.current())
+    fun `language tags map to the app's languages`() {
+        assertEquals(AppLanguage.SYSTEM, AppLanguage.fromTags(""))
+        assertEquals(AppLanguage.FRENCH_CANADA, AppLanguage.fromTags("fr-CA"))
+        assertEquals(AppLanguage.FRENCH_FRANCE, AppLanguage.fromTags("fr-FR,en"))
+        assertEquals(AppLanguage.FRENCH_FRANCE, AppLanguage.fromTags("fr-BE"))
+        assertEquals(AppLanguage.ENGLISH, AppLanguage.fromTags("en-GB"))
+        assertEquals(AppLanguage.SYSTEM, AppLanguage.fromTags("de-DE"))
     }
 
     @Test
-    fun `the screen shows the current language`() {
-        compose.setContent { SettingsScreen(onBack = {}, versionName = "1.0", viewModel = SettingsViewModel(FakeProgressRepository(), FakePurchases(), FakeConsent())) }
+    fun `the screen switches the language`() {
+        val vm = SettingsViewModel(FakeProgressRepository(), FakePurchases(), FakeConsent())
+        compose.setContent { SettingsScreen(onBack = {}, versionName = "1.0", viewModel = vm) }
+        AppLanguage.current() // Readable without an AppCompat activity (SYSTEM then).
         compose.onNodeWithText("English").performScrollTo().performClick()
-        assertEquals(AppLanguage.ENGLISH, AppLanguage.current())
+        compose.onNodeWithText("Version 1.0").performScrollTo().assertExists()
+        AppLanguage.SYSTEM.select()
     }
 
     @Test

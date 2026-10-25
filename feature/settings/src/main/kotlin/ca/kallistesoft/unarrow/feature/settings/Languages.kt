@@ -15,11 +15,18 @@ enum class AppLanguage(val tag: String, @StringRes val label: Int) {
 
     companion object {
         /** The language chosen in the app, or [SYSTEM]. */
-        fun current(): AppLanguage {
-            val tag = AppCompatDelegate.getApplicationLocales().toLanguageTags()
-            return entries.firstOrNull { it.tag.equals(tag, ignoreCase = true) && it != SYSTEM }
-                ?: entries.firstOrNull { it.tag.isNotEmpty() && tag.startsWith(it.tag) }
-                ?: SYSTEM
+        fun current(): AppLanguage = fromTags(AppCompatDelegate.getApplicationLocales().toLanguageTags())
+
+        /** The language of AppCompat's language tags ("fr-CA", "en-US,fr"); [SYSTEM] when none of ours. */
+        fun fromTags(tags: String): AppLanguage {
+            val first = tags.substringBefore(',')
+            if (first.isEmpty()) return SYSTEM
+            return entries.firstOrNull { it != SYSTEM && it.tag.equals(first, ignoreCase = true) }
+                ?: when (first.substringBefore('-').lowercase()) {
+                    "en" -> ENGLISH
+                    "fr" -> FRENCH_FRANCE
+                    else -> SYSTEM
+                }
         }
     }
 }

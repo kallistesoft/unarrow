@@ -114,6 +114,7 @@ internal fun GameContent(state: GameUiState, actions: GameActions, modifier: Mod
             return@Scaffold
         }
         Haptics(session, state.hapticsOn)
+        Sounds(session, state.soundOn)
         Box(Modifier.fillMaxSize().padding(padding).consumeWindowInsets(padding)) {
             Column(
                 Modifier.fillMaxSize().padding(horizontal = Spacing.screen, vertical = Spacing.l),
@@ -198,7 +199,8 @@ private fun Lives(lives: Int) {
 /** A hint from the stock; with none left, one for a rewarded ad, else the hint pack for sale. */
 @Composable
 private fun HintButton(state: GameUiState, actions: GameActions, modifier: Modifier = Modifier) {
-    val playing = state.session?.status == GameStatus.PLAYING && state.session.hintId == null
+    val session = state.session
+    val playing = session != null && session.status == GameStatus.PLAYING && session.hintId == null
     when {
         state.hints > 0 -> SecondaryButton(
             stringResource(R.string.game_hint) + " · " + state.hints,

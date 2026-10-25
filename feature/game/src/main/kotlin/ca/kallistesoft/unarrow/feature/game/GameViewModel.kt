@@ -62,6 +62,7 @@ class GameViewModel @AssistedInject constructor(
             hints = progress.hints,
             rewardedReady = rewardedReady,
             hintPackPrice = prices[Product.HINTS_10],
+            soundOn = progress.soundOn,
             hapticsOn = progress.hapticsOn,
         )
     }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), GameUiState())

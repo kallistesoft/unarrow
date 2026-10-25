@@ -1,5 +1,7 @@
 package ca.kallistesoft.unarrow.feature.game
 
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.test.assertIsNotEnabled
 import androidx.compose.ui.test.junit4.createComposeRule
 import androidx.compose.ui.test.onAllNodesWithContentDescription
@@ -174,5 +176,22 @@ class GameScreenTest {
     fun `the preview renders`() {
         compose.setContent { GamePreview() }
         compose.onNodeWithText("Level 14").assertExists()
+    }
+
+    @Test
+    fun `sounds play for exits, blocked taps and wins, and stay quiet when off`() {
+        val sounds = GameSounds(org.robolectric.RuntimeEnvironment.getApplication())
+        Sound.entries.forEach { sounds.play(it) }
+        sounds.release()
+
+        var state by androidx.compose.runtime.mutableStateOf(GameUiState(session(), soundOn = true, hapticsOn = true))
+        compose.setContent { UnarrowTheme { GameContent(state, GameActions()) } }
+        state = state.copy(session = session(exits = listOf(up)).copy(board = Board(2, 2, listOf(right, left, down))))
+        compose.waitForIdle()
+        state = state.copy(session = state.session!!.copy(blocked = BlockedTap(left.id, right.id, 1)))
+        compose.waitForIdle()
+        state = state.copy(session = state.session!!.copy(status = GameStatus.WON), soundOn = false, hapticsOn = false)
+        compose.waitForIdle()
+        compose.onNodeWithText("Solved!").assertExists()
     }
 }

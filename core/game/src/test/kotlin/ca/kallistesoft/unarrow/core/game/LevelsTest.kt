@@ -37,6 +37,39 @@ class LevelsTest {
     }
 
     @Test
+    fun `levels never end - past level 36 the grid stays 9 x 9 and fills between 70 and 90 percent`() {
+        assertEquals(36, Levels.LAST_GROWING_LEVEL)
+        assertEquals(9, Levels.spec(36).rows)
+        val cells = 9 * 9
+        val fills = (37..2_000).filter { it % Levels.BREATHER_EVERY != 0 }.map { level ->
+            val spec = Levels.spec(level)
+            assertEquals(9, spec.rows)
+            spec.arrowCount
+        }
+        assertTrue(fills.all { it in Math.round(cells * 0.70).toInt()..Math.round(cells * 0.90).toInt() })
+        assertTrue("fills vary", fills.toSet().size > 10)
+    }
+
+    @Test
+    fun `every tenth level past 36 is a breather`() {
+        assertEquals(Math.round(81 * Levels.BREATHER_FILL).toInt(), Levels.spec(40).arrowCount)
+        assertEquals(Math.round(81 * Levels.BREATHER_FILL).toInt(), Levels.spec(1_000_000).arrowCount)
+    }
+
+    @Test
+    fun `far levels generate, solvable, and fast`() {
+        val start = System.nanoTime()
+        for (level in listOf(37, 99, 1_234, 10_000, 123_456, 9_999_999)) {
+            val board = Levels.spec(level).board()
+            assertEquals(Levels.spec(level).arrowCount, board.arrows.size)
+            var b = board
+            while (!b.isCleared) b = (b.tap(b.freeArrows().first().id) as TapResult.Exited).board
+        }
+        for (level in 37..10_000) Levels.spec(level).board()
+        assertTrue("10,000 levels in under 20 s", System.nanoTime() - start < 20_000_000_000L)
+    }
+
+    @Test
     fun `levels are stable`() {
         assertEquals(Levels.spec(42).board(), Levels.spec(42).board())
         assertNotEquals(Levels.spec(42).board(), Levels.spec(43).board())

@@ -74,6 +74,20 @@ jobs:
             app/build/outputs/bundle/release/*.aab
             app/build/outputs/mapping/release/mapping.txt
 
+      # Failing tests in the log itself (the reports artifact needs a download).
+      - name: Failed tests
+        if: failure()
+        run: |
+          python3 - <<'PY'
+          import glob, xml.etree.ElementTree as ET
+          for f in glob.glob('**/build/test-results/**/*.xml', recursive=True):
+              for case in ET.parse(f).getroot().iter('testcase'):
+                  for bad in list(case.findall('failure')) + list(case.findall('error')):
+                      print(f"FAILED {case.get('classname')} > {case.get('name')}")
+                      print('\n'.join((bad.text or bad.get('message') or '').splitlines()[:15]))
+                      print()
+          PY
+
       - uses: actions/upload-artifact@v4
         if: failure()
         with:

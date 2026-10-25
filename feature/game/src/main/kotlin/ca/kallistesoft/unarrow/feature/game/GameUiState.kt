@@ -42,6 +42,7 @@ data class GameUiState(
     val rewardedReady: Boolean = false,
     /** Price of a 10-hint pack, null while Play hasn't given one (not for sale now). */
     val hintPackPrice: String? = null,
+    val soundOn: Boolean = true,
     val hapticsOn: Boolean = true,
 ) {
     val loading: Boolean get() = session == null
