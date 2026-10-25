@@ -2,8 +2,11 @@
 
 - Progress is tracked in `PROGRESS.md`: update it and push it with every step.
 - Work on `develop`; no pull request until the release.
-- This cloud environment can't download the Android SDK: GitHub Actions is the compiler and test runner. Push, then
-  read the run with the GitHub MCP tools (`actions_list`, `get_job_logs`) and fix until green.
+- Local builds work on this Mac: prefix Gradle with
+  `JAVA_HOME="/Applications/Android Studio.app/Contents/jbr/Contents/Home" ANDROID_HOME=~/Library/Android/sdk`
+  (e.g. `./gradlew testDebugUnitTest :koverVerifyUnit :app:lintDebug`). GitHub Actions stays the reference: push, then
+  check the "Android CI" run (`gh run list -R kallistesoft/unarrow --branch develop`, `gh run view <id> --log-failed`)
+  and fix until green.
 - Never ask the user for console values (AdMob, Firebase, Play Console): the app works without them; list what's
   needed under "Needs you at release" in `PROGRESS.md`.
 
@@ -15,6 +18,9 @@ Repo skills live in `.claude/skills/`. Read the skill's `SKILL.md` and follow it
   `stateIn`, or `asStateFlow().onStart { }` + `stateIn`), enforced by `scripts/check-conventions.sh`
 - [unit-testing](.claude/skills/unit-testing/SKILL.md): JVM and Robolectric Compose tests, Kover 90% of lines for every
   class (`./gradlew :koverVerifyUnit`)
+- [testing-on-emulator](.claude/skills/testing-on-emulator/SKILL.md): build, install and drive the app on the emulator
+  (`emulator-5554`) or the user's Pixel 10 (wireless adb: `adb mdns services`, then `adb connect <ip:port>`; adb is
+  `~/Library/Android/sdk/platform-tools/adb`), with screenshots and crash checks
 - Android skills (Google): adaptive, edge-to-edge, navigation-3, jetpack-compose-performance, play-billing-library-
   version-upgrade, play-policy-insights, r8-analyzer, android-intent-security, android-permissions-security,
   anr-audit-and-fix, styles, testing-setup
