@@ -33,23 +33,36 @@ GitHub Actions, on every push.
 | 17b | Endless levels: 9×9 past level 36, fill drawn per level (70–90%), a lighter level every 10 | ✅ | 31e8ef8 |
 | 18 | Coverage at 90% (Kover), lint clean, release (R8) build | ✅ | 70ca30f |
 | 19 | Store listing texts (en-US, fr-CA, fr-FR) and Data safety notes in `store/` | ✅ | 31e8ef8 |
-| 20 | Release: real AdMob IDs, Firebase config, signed bundle, pull request `develop` → `main` | ⬜ waits on you | |
+| 19b | Real AdMob IDs (release), banner under the board, interstitial pacing from Remote Config | ✅ | 112dca4, df6e762, f548391 |
+| 20 | Release: Firebase config secret, Play products, signed bundle, pull request `develop` → `main` | ⬜ waits on you | |
 
 ✅ done · ⏳ in progress · ⬜ to do · ❌ blocked
 
 ## Needs you at release
 
-Claude can't sign in to Google's consoles. Until these steps are done, the app runs with Google's test ads, without
-Firebase (no force update or Crashlytics), and with no purchases shown.
+Claude can't sign in to Google's consoles. Until the remaining steps are done, CI builds without Firebase (no remote
+values, force update or Crashlytics) and the app shows no purchases.
 
-1. **Firebase** (contact@kallistesoft.ca):
-   - add Android apps `ca.kallistesoft.unarrow` and `ca.kallistesoft.unarrow.debug` to a new project "Unarrow";
+1. **Firebase:** ✅ project `unarrow-d140e` (contact@kallistesoft.ca) with both Android apps registered
+   (`ca.kallistesoft.unarrow`, `ca.kallistesoft.unarrow.debug`). Still to do:
    - download `google-services.json` and save it as the GitHub secret `GOOGLE_SERVICES_JSON`;
    - turn on Crashlytics;
-   - in Remote Config, add `min_version_code` (number, 0) and `ads_enabled` (boolean, true).
-2. **AdMob:** add the Android app "Unarrow" and create two ad units: an interstitial ("Level finished") and a rewarded
-   ad ("Hint or extra life"). Send the three IDs (app ID and the two units) and Claude puts them in
-   `app/build.gradle.kts`.
+   - in Remote Config, add these parameters (the app uses the default until the console has a value):
+
+     | Parameter | Type | Default | What it does |
+     |---|---|---|---|
+     | `min_version_code` | number | 0 | force update below this versionCode (`min_version_code_debug` for debug) |
+     | `ads_enabled` | boolean | true | every ad (interstitial, rewarded, banner) |
+     | `rewarded_ads` | boolean | true | "Watch an ad" for a hint or an extra life |
+     | `review_prompt` | boolean | true | asking for a Play rating |
+     | `interstitial_first_level` | number | 5 | first level after which interstitials may show (below 1: default) |
+     | `interstitial_every` | number | 3 | one interstitial every this many solved puzzles (below 1: default) |
+     | `interstitial_cap_seconds` | number | 180 | at most one interstitial every this many seconds (below 0: default) |
+2. **AdMob:** ✅ app "Unarrow" and its units (in `app/build.gradle.kts`, release builds only): app
+   `ca-app-pub-7557144664039757~7253132965`, interstitial `…/5991936465`, rewarded `…/9739609786`, banner
+   `…/4327501007`. Ad content rating T, sensitive categories blocked as for Block Daily, and the EU and US-states
+   consent messages include Unarrow. Keep AdMob's interstitial frequency cap no tighter than
+   `interstitial_cap_seconds`.
 3. **Play Console:** create the app "Unarrow: Daily Arrow Puzzle" (`ca.kallistesoft.unarrow`, free, game > puzzle), and
    add these in-app products: `remove_ads` (one-time, $3.99) and `hints_10` (consumable, $0.99).
 4. **Privacy policy:** ✅ live at `https://kallistesoft.ca/en/privacy/unarrow/` (FR: `/confidentialite/unarrow/`); paste
@@ -65,3 +78,6 @@ Firebase (no force update or Crashlytics), and with no purchases shown.
 - 2026-10-25: CI green on tests, coverage and lint (run #9); endless level curve; sounds; store texts.
 - 2026-10-25: CI fully green (run #10), release bundle built with R8.
 - 2026-10-25: privacy policy live on kallistesoft.ca (kallistesoft-site PR #5, merged).
+- 2026-10-25: Firebase project and AdMob app created (console); release builds use the real AdMob units; a banner
+  sits under the board while ads are allowed (gone after Remove ads); interstitial pacing (`interstitial_first_level`,
+  `interstitial_every`, `interstitial_cap_seconds`) comes from Remote Config, with 5, 3 and 180 s as defaults.
