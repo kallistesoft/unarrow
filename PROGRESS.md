@@ -52,8 +52,8 @@ Firebase (no force update or Crashlytics), and with no purchases shown.
    `app/build.gradle.kts`.
 3. **Play Console:** create the app "Unarrow: Daily Arrow Puzzle" (`ca.kallistesoft.unarrow`, free, game > puzzle), and
    add these in-app products: `remove_ads` (one-time, $3.99) and `hints_10` (consumable, $0.99).
-4. **Privacy policy:** a public URL is required for an app with ads; Claude can write the page, you host it
-   (kallistesoft.ca) and paste the URL in Play Console.
+4. **Privacy policy:** written (FR/EN) in kallistesoft-site PR #5. Once it's merged (the site deploys on push), paste
+   `https://kallistesoft.ca/en/privacy/unarrow/` in Play Console (and AdMob).
 5. **Signing:** create an upload keystore and add the secrets `UA_KEYSTORE_BASE64`, `UA_KEYSTORE_PASSWORD`,
    `UA_KEY_ALIAS` and `UA_KEY_PASSWORD` to the GitHub repo.
 
@@ -64,3 +64,4 @@ Firebase (no force update or Crashlytics), and with no purchases shown.
   the app written; CI is the compiler (this environment can't download the Android SDK).
 - 2026-10-25: CI green on tests, coverage and lint (run #9); endless level curve; sounds; store texts.
 - 2026-10-25: CI fully green (run #10), release bundle built with R8.
+- 2026-10-25: privacy policy pages written (kallistesoft-site PR #5).
