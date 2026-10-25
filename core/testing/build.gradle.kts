@@ -13,6 +13,8 @@ dependencies {
     api(project(":core:billing"))
     api(project(":core:data"))
     api(project(":core:flags"))
+    // The BOM travels with the Compose test library, for modules without Compose of their own.
+    api(platform(libs.androidx.compose.bom))
     api(libs.androidx.compose.ui.test.junit4)
     api(libs.junit)
     api(libs.kotlinx.coroutines.test)
