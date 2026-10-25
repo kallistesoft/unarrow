@@ -4,6 +4,7 @@ import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.slideInVertically
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.BoxScope
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.WindowInsets
@@ -83,6 +84,7 @@ fun GameScreen(
             onExtraLife = viewModel::extraLife,
             onShare = viewModel::share,
         ),
+        banner = { viewModel.bannerAds.Banner(it) },
     )
 }
 
@@ -99,8 +101,14 @@ internal data class GameActions(
     val onShare: (text: String, chooserTitle: String) -> Unit = { _, _ -> },
 )
 
+/** [banner] draws the banner ad, placed under the board and its buttons while [GameUiState.banner]. */
 @Composable
-internal fun GameContent(state: GameUiState, actions: GameActions, modifier: Modifier = Modifier) {
+internal fun GameContent(
+    state: GameUiState,
+    actions: GameActions,
+    modifier: Modifier = Modifier,
+    banner: @Composable (Modifier) -> Unit = {},
+) {
     val session = state.session
     Scaffold(
         modifier.testTag("game"),
@@ -115,44 +123,54 @@ internal fun GameContent(state: GameUiState, actions: GameActions, modifier: Mod
         }
         Haptics(session, state.hapticsOn)
         Sounds(session, state.soundOn)
-        Box(Modifier.fillMaxSize().padding(padding).consumeWindowInsets(padding)) {
-            Column(
-                Modifier.fillMaxSize().padding(horizontal = Spacing.screen, vertical = Spacing.l),
-                horizontalAlignment = Alignment.CenterHorizontally,
-                verticalArrangement = Arrangement.spacedBy(Spacing.l),
-            ) {
-                if (session.mode == GameMode.LEVELS && session.level <= TUTORIAL_LEVELS) {
-                    Text(
-                        stringResource(R.string.game_tutorial),
-                        style = MaterialTheme.typography.bodyLarge,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant,
-                        textAlign = TextAlign.Center,
-                    )
-                }
-                Box(Modifier.weight(1f).fillMaxWidth(), contentAlignment = Alignment.Center) {
-                    BoardView(session, actions.onTap, Modifier.widthIn(max = Sizes.maxContentWidth).fillMaxWidth())
-                }
-                Row(
-                    Modifier.widthIn(max = Sizes.maxContentWidth).fillMaxWidth(),
-                    horizontalArrangement = Arrangement.spacedBy(Spacing.m),
-                ) {
-                    HintButton(state, actions, Modifier.weight(1f))
-                    TertiaryButton(
-                        stringResource(R.string.game_restart),
-                        onClick = actions.onRestart,
-                        modifier = Modifier.weight(1f),
-                        enabled = session.status == GameStatus.PLAYING,
-                    )
-                }
+        Column(Modifier.fillMaxSize().padding(padding).consumeWindowInsets(padding)) {
+            Box(Modifier.weight(1f).fillMaxWidth()) {
+                PlayArea(state, session, actions)
             }
-            AnimatedVisibility(
-                visible = session.status != GameStatus.PLAYING,
-                enter = slideInVertically { it },
-                modifier = Modifier.align(Alignment.BottomCenter),
-            ) {
-                ResultPanel(state, actions)
-            }
+            // Under the play area, never over it: the strip takes room only while a banner shows.
+            if (state.banner) banner(Modifier.fillMaxWidth())
         }
+    }
+}
+
+/** The board, its buttons, and the result panel over them once the puzzle is over. */
+@Composable
+private fun BoxScope.PlayArea(state: GameUiState, session: GameSession, actions: GameActions) {
+    Column(
+        Modifier.fillMaxSize().padding(horizontal = Spacing.screen, vertical = Spacing.l),
+        horizontalAlignment = Alignment.CenterHorizontally,
+        verticalArrangement = Arrangement.spacedBy(Spacing.l),
+    ) {
+        if (session.mode == GameMode.LEVELS && session.level <= TUTORIAL_LEVELS) {
+            Text(
+                stringResource(R.string.game_tutorial),
+                style = MaterialTheme.typography.bodyLarge,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                textAlign = TextAlign.Center,
+            )
+        }
+        Box(Modifier.weight(1f).fillMaxWidth(), contentAlignment = Alignment.Center) {
+            BoardView(session, actions.onTap, Modifier.widthIn(max = Sizes.maxContentWidth).fillMaxWidth())
+        }
+        Row(
+            Modifier.widthIn(max = Sizes.maxContentWidth).fillMaxWidth(),
+            horizontalArrangement = Arrangement.spacedBy(Spacing.m),
+        ) {
+            HintButton(state, actions, Modifier.weight(1f))
+            TertiaryButton(
+                stringResource(R.string.game_restart),
+                onClick = actions.onRestart,
+                modifier = Modifier.weight(1f),
+                enabled = session.status == GameStatus.PLAYING,
+            )
+        }
+    }
+    AnimatedVisibility(
+        visible = session.status != GameStatus.PLAYING,
+        enter = slideInVertically { it },
+        modifier = Modifier.align(Alignment.BottomCenter),
+    ) {
+        ResultPanel(state, actions)
     }
 }
 

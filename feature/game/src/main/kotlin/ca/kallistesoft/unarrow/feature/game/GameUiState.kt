@@ -44,6 +44,8 @@ data class GameUiState(
     val hintPackPrice: String? = null,
     val soundOn: Boolean = true,
     val hapticsOn: Boolean = true,
+    /** The banner ad shows under the board (ads allowed, "Remove ads" not bought). */
+    val banner: Boolean = false,
 )
 
 const val MAX_LIVES = 3

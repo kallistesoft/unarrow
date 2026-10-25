@@ -2,6 +2,7 @@ package ca.kallistesoft.unarrow.feature.game
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import ca.kallistesoft.unarrow.core.ads.BannerAds
 import ca.kallistesoft.unarrow.core.ads.InterstitialAds
 import ca.kallistesoft.unarrow.core.ads.RewardedAds
 import ca.kallistesoft.unarrow.core.billing.Product
@@ -29,7 +30,8 @@ import kotlinx.coroutines.launch
 /**
  * One game screen: a puzzle, its lives and hints, then the next one. Tapping a blocked arrow costs a life; with none
  * left the puzzle is lost (a rewarded ad buys one more). A solved puzzle is saved at once; the interstitial (if one is
- * due) comes when the player moves on, never during a puzzle.
+ * due) comes when the player moves on, never during a puzzle. The banner ([bannerAds]) sits under the board while
+ * ads are allowed.
  */
 @HiltViewModel(assistedFactory = GameViewModel.Factory::class)
 class GameViewModel @AssistedInject constructor(
@@ -41,6 +43,7 @@ class GameViewModel @AssistedInject constructor(
     private val purchases: Purchases,
     private val review: ReviewPrompt,
     private val sharer: Sharer,
+    internal val bannerAds: BannerAds,
 ) : ViewModel() {
     @AssistedFactory
     interface Factory {
@@ -56,7 +59,8 @@ class GameViewModel @AssistedInject constructor(
         progress.progress,
         rewarded.rewardedReady,
         purchases.prices,
-    ) { session, progress, rewardedReady, prices ->
+        bannerAds.bannerAllowed,
+    ) { session, progress, rewardedReady, prices, banner ->
         GameUiState(
             session = session,
             hints = progress.hints,
@@ -64,6 +68,7 @@ class GameViewModel @AssistedInject constructor(
             hintPackPrice = prices[Product.HINTS_10],
             soundOn = progress.soundOn,
             hapticsOn = progress.hapticsOn,
+            banner = banner,
         )
     }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), GameUiState())
 

@@ -1,6 +1,9 @@
 package ca.kallistesoft.unarrow.core.ads
 
 import android.app.Activity
+import androidx.compose.runtime.Composable
+import androidx.compose.ui.Modifier
+import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.StateFlow
 
 /**
@@ -25,6 +28,19 @@ interface RewardedAds {
     suspend fun showRewarded(): Boolean
 }
 
+/**
+ * The banner strip under the board while playing. Shown only while ads may be requested (as for interstitials:
+ * consent, `ads_enabled`), and never once "Remove ads" is bought.
+ */
+interface BannerAds {
+    /** The screen places [Banner] only while true. */
+    val bannerAllowed: Flow<Boolean>
+
+    /** An anchored banner, as wide as [modifier] allows; it takes no room until an ad has loaded. */
+    @Composable
+    fun Banner(modifier: Modifier)
+}
+
 /** The consent to ads (Google's User Messaging Platform), asked at launch and changed from Settings. */
 interface AdConsent {
     /** The user's region requires a way back to their consent choices: Settings shows "Privacy options" while true. */
@@ -47,6 +63,7 @@ interface AdConsent {
 data class AdsConfig(
     val interstitialUnitId: String,
     val rewardedUnitId: String = "",
+    val bannerUnitId: String = "",
     val enabled: Boolean = true,
 )
 

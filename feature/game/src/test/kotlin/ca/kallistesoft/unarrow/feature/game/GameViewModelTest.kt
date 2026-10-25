@@ -30,7 +30,7 @@ class GameViewModelTest {
     private val engagement = FakeEngagement()
 
     private fun TestScope.viewModel(mode: GameMode = GameMode.LEVELS) =
-        GameViewModel(mode, progress, { today }, ads, ads, purchases, engagement, engagement).also {
+        GameViewModel(mode, progress, { today }, ads, ads, purchases, engagement, engagement, ads).also {
             collecting(it.uiState)
         }
 
@@ -183,5 +183,13 @@ class GameViewModelTest {
         val vm = viewModel()
         vm.share("result", "Share")
         assertEquals(listOf("result"), engagement.shared)
+    }
+
+    @Test
+    fun `the banner follows the ad rules, and goes once ads are removed`() = runTest {
+        val vm = viewModel()
+        assertTrue(vm.uiState.value.banner)
+        ads.bannerAllowed.value = false
+        assertEquals(false, vm.uiState.value.banner)
     }
 }

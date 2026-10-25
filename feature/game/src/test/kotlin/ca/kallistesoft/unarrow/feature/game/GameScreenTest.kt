@@ -2,7 +2,9 @@ package ca.kallistesoft.unarrow.feature.game
 
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.setValue
+import androidx.compose.foundation.layout.height
 import androidx.compose.ui.test.assertIsNotEnabled
+import androidx.compose.ui.test.getUnclippedBoundsInRoot
 import androidx.compose.ui.test.junit4.createComposeRule
 import androidx.compose.ui.test.onAllNodesWithContentDescription
 import androidx.compose.ui.test.onNodeWithContentDescription
@@ -11,6 +13,7 @@ import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.onRoot
 import androidx.compose.ui.test.captureToImage
 import androidx.compose.ui.test.performClick
+import ca.kallistesoft.unarrow.core.designsystem.Sizes
 import ca.kallistesoft.unarrow.core.designsystem.UnarrowTheme
 import ca.kallistesoft.unarrow.core.game.Arrow
 import ca.kallistesoft.unarrow.core.game.Board
@@ -170,6 +173,22 @@ class GameScreenTest {
     }
 
     @Test
+    fun `the banner sits under the play area only while allowed`() {
+        var state by androidx.compose.runtime.mutableStateOf(GameUiState(session(), banner = true))
+        compose.setContent {
+            UnarrowTheme {
+                GameContent(state, GameActions(), banner = { FakeAds().Banner(it.height(Sizes.icon)) })
+            }
+        }
+        val banner = compose.onNodeWithTag("banner").assertExists().getUnclippedBoundsInRoot()
+        val restart = compose.onNodeWithText("Restart").getUnclippedBoundsInRoot()
+        assertTrue("under the buttons", banner.top >= restart.bottom)
+
+        state = state.copy(banner = false)
+        compose.onNodeWithTag("banner").assertDoesNotExist()
+    }
+
+    @Test
     fun `restart starts the puzzle again`() {
         var restarts = 0
         show(GameUiState(session()), GameActions(onRestart = { restarts++ }))
@@ -215,11 +234,12 @@ class GameScreenTest {
         val ads = FakeAds()
         val vm = GameViewModel(
             GameMode.DAILY, FakeProgressRepository(), { Levels.FIRST_DAILY_EPOCH_DAY }, ads, ads, FakePurchases(),
-            FakeEngagement(), FakeEngagement(),
+            FakeEngagement(), FakeEngagement(), ads,
         )
         var home = 0
         compose.setContent { UnarrowTheme { GameScreen(GameMode.DAILY, onBack = { home++ }, viewModel = vm) } }
         compose.onNodeWithText("Daily #1").assertExists()
+        compose.onNodeWithTag("banner").assertExists()
         while (vm.uiState.value.session!!.board.arrows.isNotEmpty()) {
             vm.tap(vm.uiState.value.session!!.board.freeArrows().first().id)
         }

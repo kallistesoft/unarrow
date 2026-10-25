@@ -5,6 +5,7 @@ import android.os.SystemClock
 import ca.kallistesoft.unarrow.core.ads.AdConsent
 import ca.kallistesoft.unarrow.core.ads.AdsConfig
 import ca.kallistesoft.unarrow.core.ads.AdsManager
+import ca.kallistesoft.unarrow.core.ads.BannerAds
 import ca.kallistesoft.unarrow.core.ads.GoogleAdsSdk
 import ca.kallistesoft.unarrow.core.ads.InterstitialAds
 import ca.kallistesoft.unarrow.core.ads.RewardedAds
@@ -26,8 +27,9 @@ import kotlinx.coroutines.flow.map
 import javax.inject.Singleton
 
 /**
- * AdMob behind [InterstitialAds], [RewardedAds] and [AdConsent]; the app provides [AdsConfig] (the ad units of its
- * build type). Interstitials stop once "Remove ads" is owned (kept in the progress by the billing module).
+ * AdMob behind [InterstitialAds], [RewardedAds], [BannerAds] and [AdConsent]; the app provides [AdsConfig] (the ad
+ * units of its build type). Interstitials and the banner stop once "Remove ads" is owned (kept in the progress by the
+ * billing module).
  */
 @Module
 @InstallIn(SingletonComponent::class)
@@ -56,6 +58,9 @@ internal object AdsModule {
 
     @Provides
     fun rewardedAds(manager: AdsManager): RewardedAds = manager
+
+    @Provides
+    fun bannerAds(manager: AdsManager): BannerAds = manager
 
     @Provides
     fun adConsent(manager: AdsManager): AdConsent = manager

@@ -7,6 +7,7 @@ import io.mockk.mockk
 import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.test.TestScope
 import kotlinx.coroutines.test.runCurrent
@@ -338,6 +339,49 @@ class AdsManagerTest {
         now += AD_LIFETIME_MILLIS
         assertFalse(ads.showRewarded())
         assertTrue(sdk.rewardedOn.isEmpty())
+    }
+
+    @Test
+    fun `the banner shows once the SDK has started, and follows consent, ads_enabled and remove ads`() = runTest {
+        val banner = mutableListOf<Boolean>()
+        val ads = manager(AdsConfig("unit-1", bannerUnitId = "banner-1"))
+        backgroundScope.launch { ads.bannerAllowed.collect { banner += it } }
+        runCurrent()
+        assertEquals(listOf(false), banner)
+
+        ads.gatherConsent(activity)
+        runCurrent()
+        assertEquals(listOf(false, true), banner)
+
+        flags.set(FeatureFlag.ADS_ENABLED, false)
+        runCurrent()
+        flags.set(FeatureFlag.ADS_ENABLED, true)
+        runCurrent()
+        assertEquals(listOf(false, true, false, true), banner)
+
+        consent.onPrivacyOptions = { consent.canRequest = false }
+        ads.showPrivacyOptions()
+        runCurrent()
+        assertEquals("consent withdrawn", false, banner.last())
+
+        consent.canRequest = true
+        consent.onPrivacyOptions = {}
+        ads.showPrivacyOptions()
+        runCurrent()
+        assertEquals(true, banner.last())
+        adsRemoved.value = true
+        runCurrent()
+        assertEquals("removed for good", false, banner.last())
+    }
+
+    @Test
+    fun `no banner without a unit, nor with ads turned off in the config`() = runTest {
+        val noUnit = started()
+        assertFalse(noUnit.bannerAllowed.first())
+        val off = manager(AdsConfig("unit-1", bannerUnitId = "banner-1", enabled = false))
+        off.gatherConsent(activity)
+        runCurrent()
+        assertFalse(off.bannerAllowed.first())
     }
 
     private class FakeConsent : ConsentGateway {

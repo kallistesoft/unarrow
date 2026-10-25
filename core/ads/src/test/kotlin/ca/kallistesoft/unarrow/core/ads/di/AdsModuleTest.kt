@@ -23,6 +23,7 @@ class AdsModuleTest {
         val manager = AdsModule.adsManager(context, FakeFeatureFlags(), AdsConfig("unit-1"), { null }, FakeProgressRepository())
         assertSame(manager, AdsModule.interstitialAds(manager))
         assertSame(manager, AdsModule.rewardedAds(manager))
+        assertSame(manager, AdsModule.bannerAds(manager))
         assertSame(manager, AdsModule.adConsent(manager))
         assertFalse(manager.privacyOptionsRequired.value)
     }

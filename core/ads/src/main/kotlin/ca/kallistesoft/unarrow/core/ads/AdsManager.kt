@@ -1,6 +1,8 @@
 package ca.kallistesoft.unarrow.core.ads
 
 import android.app.Activity
+import androidx.compose.runtime.Composable
+import androidx.compose.ui.Modifier
 import ca.kallistesoft.unarrow.core.flags.FeatureFlag
 import ca.kallistesoft.unarrow.core.flags.FeatureFlags
 import kotlinx.coroutines.CoroutineScope
@@ -9,6 +11,8 @@ import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.launch
@@ -16,8 +20,10 @@ import kotlinx.coroutines.launch
 /**
  * The ad rules, on top of the SDKs ([consent], [sdk]):
  * - nothing is initialised, loaded or shown until consent allows ads to be requested, nor while `ads_enabled` is off;
- * - interstitials pace themselves ([InterstitialAds]) and stop for good once [adsRemoved] ("Remove ads" bought);
+ * - interstitials pace themselves ([InterstitialAds]); they and the banner stop for good once [adsRemoved] ("Remove
+ *   ads" bought);
  *   rewarded ads stay available, since the player asks for them, unless `rewarded_ads` is off;
+ * - the banner shows once the SDK has started, while ads may be requested;
  * - ads are preloaded, so the game never waits for a network request: not loaded means no ad;
  * - at most one interstitial every [CAP_MILLIS] (AdMob's frequency cap is set to the same);
  * - a loaded ad older than [AD_LIFETIME_MILLIS] is dropped (AdMob doesn't serve stale ones) and loaded again.
@@ -33,7 +39,7 @@ internal class AdsManager(
     private val scope: CoroutineScope,
     private val clock: () -> Long,
     private val adsRemoved: Flow<Boolean> = flowOf(false),
-) : InterstitialAds, RewardedAds, AdConsent {
+) : InterstitialAds, RewardedAds, BannerAds, AdConsent {
     private val privacyRequired = MutableStateFlow(false)
     override val privacyOptionsRequired: StateFlow<Boolean> = privacyRequired.asStateFlow()
 
@@ -49,6 +55,22 @@ internal class AdsManager(
     private var rewardedLoadedAt = 0L
     private val rewardedState = MutableStateFlow(false)
     override val rewardedReady: StateFlow<Boolean> = rewardedState.asStateFlow()
+
+    /** Consent allows ads, as last checked (at launch, after the privacy options). */
+    private val consentAllows = MutableStateFlow(false)
+    private val sdkStarted = MutableStateFlow(false)
+
+    override val bannerAllowed: Flow<Boolean> = combine(
+        consentAllows,
+        sdkStarted,
+        flags.isEnabled(FeatureFlag.ADS_ENABLED),
+        adsRemoved,
+    ) { consentAllows, sdkStarted, adsEnabled, adsRemoved ->
+        config.enabled && config.bannerUnitId.isNotEmpty() && consentAllows && sdkStarted && adsEnabled && !adsRemoved
+    }.distinctUntilChanged()
+
+    @Composable
+    override fun Banner(modifier: Modifier) = AnchoredBanner(config.bannerUnitId, modifier)
 
     override fun gatherConsent(activity: Activity) {
         if (!config.enabled) return
@@ -111,6 +133,7 @@ internal class AdsManager(
         config.rewardedUnitId.isNotEmpty() && allowed() && flags.isEnabled(FeatureFlag.REWARDED_ADS).first()
 
     private suspend fun startIfAllowed() {
+        consentAllows.value = consent.canRequestAds()
         if (allowed()) {
             if (!adsRemoved.first()) preload()
             if (rewardedAllowed()) preloadRewarded()
@@ -142,6 +165,7 @@ internal class AdsManager(
         if (!initialized) {
             initialized = true
             sdk.initialize()
+            sdkStarted.value = true
         }
     }
 }

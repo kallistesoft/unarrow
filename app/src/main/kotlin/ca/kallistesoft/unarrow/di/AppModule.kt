@@ -31,6 +31,7 @@ object AppModule {
     fun adsConfig() = AdsConfig(
         interstitialUnitId = BuildConfig.ADMOB_INTERSTITIAL_ID,
         rewardedUnitId = BuildConfig.ADMOB_REWARDED_ID,
+        bannerUnitId = BuildConfig.ADMOB_BANNER_ID,
         enabled = !underInstrumentation(),
     )
 
