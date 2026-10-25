@@ -25,6 +25,7 @@ time: traps from level 4, locks from 10, rotating arrows from 20; `DifficultyTes
 | `:app` | Application, MainActivity (splash, edge to edge, ads consent, force update gate), Navigation 3 |
 | `:feature:game` | The game screen: board, lives, hints, win and lose, sharing |
 | `:feature:home` | Home: play, daily puzzle and streak, Remove ads |
+| `:feature:history` | Every solved level and daily with its best stars and time; replay one after a rewarded ad |
 | `:feature:settings` | Sound, vibration, language, restore purchases, privacy options, rating |
 | `:core:game` | Pure Kotlin rules, generator, level curve, daily puzzle |
 | `:core:data` | Progress on DataStore (level, streak, hints, wins, settings) |

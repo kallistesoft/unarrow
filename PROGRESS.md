@@ -42,6 +42,7 @@ and bundle (R8). The APKs and the `.aab` are in the run's `unarrow-<n>` artifact
 | 19h | Sliding, rotating and locked arrows; solver (perfect line, traps, hints); curve and daily with the mechanics | ✅ | 6c923fc |
 | 19i | Nocturne redesign (studio palette, Manrope / JetBrains Mono, cards and chips), theme choice, Kallistesoft icon and splash, screenshot tests; English/French only | ✅ | 9c7b059, a9e4b42, 2e637d6, 1599e94 |
 | 19j | Landing home like the Neon games, in Nocturne: gradient and drifting arrows, glowing two-tone title and Play pill, records, special daily card (solved title fixed), how to play, sound and site footer | ✅ | 9e08bf3 |
+| 19k | History of levels and dailies (best stars and time, migration of earlier data), replay after a rewarded ad; home records in equal columns | ✅ | 7802670, ece453b |
 | 20 | Release: store graphics, listing translations, products, internal testing, pull request `develop` → `main` | ⬜ waits on you | |
 
 ✅ done · ⏳ in progress · ⬜ to do · ❌ blocked
@@ -118,3 +119,8 @@ Still open:
   a staggered entrance, a glowing Play pill, records (level, stars earned, best daily streak), a daily card with an
   accent-to-amber edge, the streak and today's result (its title no longer greys out once solved), a "how to play"
   card with the board's glyphs, and a footer with the sound toggle and kallistesoft.ca.
+- 2026-10-25: a History screen (from home's history button or its records): every solved level and daily with its
+  best stars and time; any of them can be played again after a rewarded ad, which only improves that puzzle's best
+  (never the current level, the streak or the last solved day) and has no interstitial. The progress now keeps each
+  level's and each daily's best result; earlier data moved over (level stars with an unknown time, the last solved
+  daily). Home records sit in three equal columns.

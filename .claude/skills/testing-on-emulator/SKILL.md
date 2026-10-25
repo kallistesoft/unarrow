@@ -24,7 +24,8 @@ mkdir -p build/emulator-test
 | The user's Pixel 10 (1080×2424, gesture nav) | `<ip>:<port>` | wireless debugging: `$ADB mdns services`, then `$ADB connect <ip:port>` |
 
 When both are connected, every adb call needs a target: `export ANDROID_SERIAL=emulator-5554` (or the phone's
-`ip:port`) before running the scripts. Never run `connectedAndroidTest` against the phone: it uninstalls the app
+`ip:port`) before running the scripts. The `android` CLI ignores `ANDROID_SERIAL`: pass `--device=emulator-5554` to
+every `android layout`, `android input` and `android screen` call, or it refuses to run ("Multiple devices"). Never run `connectedAndroidTest` against the phone: it uninstalls the app
 from it. The phone is only there when the user has wireless debugging on; if `adb connect` fails, use the
 emulator and say so.
 
