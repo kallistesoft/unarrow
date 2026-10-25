@@ -1,5 +1,11 @@
 package ca.kallistesoft.unarrow.core.designsystem
 
+import android.provider.Settings
+import androidx.compose.animation.core.RepeatMode
+import androidx.compose.animation.core.animateFloat
+import androidx.compose.animation.core.infiniteRepeatable
+import androidx.compose.animation.core.rememberInfiniteTransition
+import androidx.compose.animation.core.tween
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
@@ -20,8 +26,11 @@ import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.shadow
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.style.TextAlign
 
@@ -69,20 +78,27 @@ fun TertiaryButton(text: String, onClick: () -> Unit, modifier: Modifier = Modif
 @Composable
 private fun ButtonText(text: String) = Text(text, style = MaterialTheme.typography.labelLarge, textAlign = TextAlign.Center)
 
-/** A card as on the site: surface, 1 px border, radius 18; clickable when [onClick] is set. */
+/**
+ * A card as on the site: surface, 1 px border (or [borderOverride]), radius 18; clickable when [onClick] is set. Its
+ * content keeps full colours when disabled.
+ */
 @Composable
 fun BrandCard(
     modifier: Modifier = Modifier,
     onClick: (() -> Unit)? = null,
     enabled: Boolean = true,
     padding: PaddingValues = PaddingValues(Spacing.xl),
+    borderOverride: BorderStroke? = null,
     content: @Composable () -> Unit,
 ) {
+    // A disabled card (today's daily, once solved) keeps its full colours: only its click is off.
     val colors = CardDefaults.cardColors(
         containerColor = MaterialTheme.colorScheme.surfaceContainer,
+        contentColor = MaterialTheme.colorScheme.onSurface,
         disabledContainerColor = MaterialTheme.colorScheme.surfaceContainer,
+        disabledContentColor = MaterialTheme.colorScheme.onSurface,
     )
-    val border = BorderStroke(Sizes.border, UnarrowTheme.brand.cardBorder)
+    val border = borderOverride ?: BorderStroke(Sizes.border, UnarrowTheme.brand.cardBorder)
     if (onClick != null) {
         Card(onClick, modifier, enabled, MaterialTheme.shapes.large, colors, border = border) {
             Box(Modifier.padding(padding)) { content() }
@@ -132,3 +148,50 @@ fun StatusPill(text: String, modifier: Modifier = Modifier) {
         }
     }
 }
+
+/**
+ * The big call to action of a landing screen: a tall accent pill with a soft accent glow that, when [pulse], slowly
+ * breathes (like the Neon games' play button, in Nocturne colours).
+ */
+@Composable
+fun HeroButton(text: String, onClick: () -> Unit, modifier: Modifier = Modifier, enabled: Boolean = true, pulse: Boolean = true) {
+    val glow = if (pulse) {
+        val transition = rememberInfiniteTransition(label = "glow")
+        transition.animateFloat(
+            initialValue = 0f,
+            targetValue = 1f,
+            animationSpec = infiniteRepeatable(tween(GLOW_MILLIS), RepeatMode.Reverse),
+            label = "glow",
+        ).value
+    } else {
+        GLOW_STILL
+    }
+    val accent = MaterialTheme.colorScheme.primary
+    Button(
+        onClick = onClick,
+        enabled = enabled,
+        shape = CircleShape,
+        elevation = null,
+        modifier = modifier
+            .fillMaxWidth()
+            .heightIn(min = Sizes.heroButtonHeight)
+            .shadow(
+                elevation = Sizes.glowMin + (Sizes.glowMax - Sizes.glowMin) * glow,
+                shape = CircleShape,
+                ambientColor = accent,
+                spotColor = accent,
+            ),
+    ) { Text(text, style = MaterialTheme.typography.titleMedium, textAlign = TextAlign.Center) }
+}
+
+/** The player turned animations off (Developer options or Accessibility): screens stay still. */
+@Composable
+fun rememberReducedMotion(): Boolean {
+    val context = LocalContext.current
+    return remember(context) {
+        Settings.Global.getFloat(context.contentResolver, Settings.Global.ANIMATOR_DURATION_SCALE, 1f) == 0f
+    }
+}
+
+private const val GLOW_MILLIS = 1_800
+private const val GLOW_STILL = 0.5f

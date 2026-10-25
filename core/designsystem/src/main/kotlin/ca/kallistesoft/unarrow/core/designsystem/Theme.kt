@@ -91,13 +91,18 @@ data class BrandColors(
     /** Secondary text, one step quieter than onSurfaceVariant. */
     val muted2: Color,
     val ok: Color,
+    /** The landing screen's gradient runs from the background to this. */
+    val gradientEnd: Color,
+    /** The title's second word, after the accent: the text colour on light, amber on dark. */
+    val titleSecond: Color,
 )
 
 private val LightBrand = with(Nocturne.Light) {
-    BrandColors(card, surfaceHover, chip, chipText, accentText, muted2, ok)
+    BrandColors(card, surfaceHover, chip, chipText, accentText, muted2, ok, gradientEnd = bg2, titleSecond = text)
 }
 private val DarkBrand = with(Nocturne.Dark) {
-    BrandColors(card, surfaceHover, chip, chipText, accentText, muted2, ok)
+    // A deeper, accent-tinted navy at the bottom of the landing screen.
+    BrandColors(card, surfaceHover, chip, chipText, accentText, muted2, ok, Color(0xFF0B1B52), Nocturne.amber)
 }
 
 // Lock and key colours from the studio palette (amber, blue, violet), each also drawn with its own shape. Light

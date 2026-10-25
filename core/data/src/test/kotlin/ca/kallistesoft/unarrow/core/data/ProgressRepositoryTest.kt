@@ -73,6 +73,12 @@ class ProgressRepositoryTest {
     }
 
     @Test
+    fun `total stars add up the best of each level`() {
+        assertEquals(0, GameProgress().totalStars)
+        assertEquals(7, GameProgress(levelStars = mapOf(1 to 3, 2 to 1, 5 to 3)).totalStars)
+    }
+
+    @Test
     fun `tips are remembered once shown`() = runTest {
         val repo = repository()
         repo.markTipSeen("LOCKS")
@@ -106,6 +112,10 @@ class ProgressRepositoryTest {
         repo.completeDaily(DailyResult(stars = 2, seconds = 10))
         assertEquals(DailyResult(3, 150), repo.progress.first().bestDaily)
         assertFalse(DailyResult(3, 150).beats(DailyResult(3, 150)))
+        assertEquals("today's own result", DailyResult(2, 10), repo.progress.first().dailyResult(day))
+        repo.completeDaily(DailyResult(stars = 1, seconds = 5))
+        assertEquals("a worse replay keeps today's best", DailyResult(2, 10), repo.progress.first().dailyResult(day))
+        assertEquals(null, repo.progress.first().dailyResult(day + 1))
     }
 
     @Test

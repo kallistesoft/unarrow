@@ -17,6 +17,19 @@
         <item quantity="one">%d-day streak</item>
         <item quantity="other">%d-day streak</item>
     </plurals>
+    <string name="home_record_level">Level</string>
+    <string name="home_record_stars">Stars</string>
+    <string name="home_record_streak">Best streak</string>
+    <string name="home_record_label">%1$s: %2$d</string>
+    <string name="home_howto">How to play</string>
+    <string name="home_howto_intro">Clear the board by tapping its arrows in the right order.</string>
+    <string name="home_howto_exit">An arrow with a clear path leaves the board.</string>
+    <string name="home_howto_slide">A blocked arrow slides to the obstacle and costs a life.</string>
+    <string name="home_howto_rotate">Arrows marked ↻ turn a quarter after each move.</string>
+    <string name="home_howto_lock">A locked arrow waits until the key of its colour has left.</string>
+    <string name="home_sound_on">Sound on</string>
+    <string name="home_sound_off">Sound off</string>
+    <string name="home_website">kallistesoft.ca</string>
     <string name="home_remove_ads">Remove ads</string>
     <string name="home_ads_removed">No ads. Thank you!</string>
     <string name="settings">Settings</string>

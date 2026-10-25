@@ -23,12 +23,20 @@ data class GameProgress(
     val levelStars: Map<Int, Int> = emptyMap(),
     /** The best daily puzzle ever solved: the most stars, then the fastest. */
     val bestDaily: DailyResult? = null,
+    /** The best try at the daily of [lastDailyDay] (a replay can improve it). */
+    val lastDailyResult: DailyResult? = null,
     /** The tips already shown (a mechanic's name), each shown once. */
     val tipsSeen: Set<String> = emptySet(),
     /** Light or dark look, or the system's (Settings › Theme). */
     val theme: AppTheme = AppTheme.SYSTEM,
 ) {
     fun dailyDone(today: Long): Boolean = lastDailyDay == today
+
+    /** [today]'s daily result, when it was solved. */
+    fun dailyResult(today: Long): DailyResult? = lastDailyResult.takeIf { dailyDone(today) }
+
+    /** Every star earned: the best of each solved level, added up. */
+    val totalStars: Int get() = levelStars.values.sum()
 
     /** The streak still counts until the end of the day after the last solved daily. */
     fun currentStreak(today: Long): Int =
@@ -64,7 +72,9 @@ fun GameProgress.withLevelSolved(level: Int, stars: Int): GameProgress = copy(
  */
 fun GameProgress.withDailySolved(day: Long, result: DailyResult): GameProgress {
     val best = if (result.beats(bestDaily)) result else bestDaily
-    if (lastDailyDay == day) return copy(bestDaily = best)
+    if (lastDailyDay == day) {
+        return copy(bestDaily = best, lastDailyResult = if (result.beats(lastDailyResult)) result else lastDailyResult)
+    }
     val streak = if (lastDailyDay == day - 1) dailyStreak + 1 else 1
     return copy(
         dailyStreak = streak,
@@ -72,5 +82,6 @@ fun GameProgress.withDailySolved(day: Long, result: DailyResult): GameProgress {
         lastDailyDay = day,
         wins = wins + 1,
         bestDaily = best,
+        lastDailyResult = result,
     )
 }

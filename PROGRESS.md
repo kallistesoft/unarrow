@@ -41,6 +41,7 @@ and bundle (R8). The APKs and the `.aab` are in the run's `unarrow-<n>` artifact
 | 19g | Timer and stars (best per level, best daily), stars and time in shares | ✅ | f433acb |
 | 19h | Sliding, rotating and locked arrows; solver (perfect line, traps, hints); curve and daily with the mechanics | ✅ | 6c923fc |
 | 19i | Nocturne redesign (studio palette, Manrope / JetBrains Mono, cards and chips), theme choice, Kallistesoft icon and splash, screenshot tests; English/French only | ✅ | 9c7b059, a9e4b42, 2e637d6, 1599e94 |
+| 19j | Landing home like the Neon games, in Nocturne: gradient and drifting arrows, glowing two-tone title and Play pill, records, special daily card (solved title fixed), how to play, sound and site footer | ✅ | (this commit) |
 | 20 | Release: store graphics, listing translations, products, internal testing, pull request `develop` → `main` | ⬜ waits on you | |
 
 ✅ done · ⏳ in progress · ⬜ to do · ❌ blocked
@@ -112,3 +113,8 @@ Still open:
   (board corner with K and S, the sun and the waves, on navy), drawn by `tools/make_icon.py`; screenshot references
   for every screen in both themes. Settings now offers English or French only; French uses the Quebec wording on a
   Canadian phone and France's elsewhere.
+- 2026-10-25: the home is now a landing screen in the family of the Neon games, in Nocturne colours: a gradient with a
+  few arrows drifting behind (still when the system's animations are off), "UN" + "ARROW" glowing in two colours with
+  a staggered entrance, a glowing Play pill, records (level, stars earned, best daily streak), a daily card with an
+  accent-to-amber edge, the streak and today's result (its title no longer greys out once solved), a "how to play"
+  card with the board's glyphs, and a footer with the sound toggle and kallistesoft.ca.

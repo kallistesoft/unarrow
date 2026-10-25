@@ -34,6 +34,15 @@ object Sizes {
     val iconHero = 72.dp
     val buttonHeight = 52.dp
     val smallButtonHeight = 44.dp
+    val heroButtonHeight = 64.dp
+
+    /** The hero button's glow, breathing between these elevations. */
+    val glowMin = 10.dp
+    val glowMax = 24.dp
+
+    /** A "how to play" chip and the glyph in it. */
+    val chip = 32.dp
+    val chipIcon = 20.dp
     val touchTarget = 48.dp
 
     /** Widest a board or a column of buttons gets (tablets, landscape). */

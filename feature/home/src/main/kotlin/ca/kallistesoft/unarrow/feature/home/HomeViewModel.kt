@@ -5,6 +5,7 @@ import androidx.lifecycle.viewModelScope
 import ca.kallistesoft.unarrow.core.ads.RewardedAds
 import ca.kallistesoft.unarrow.core.billing.Product
 import ca.kallistesoft.unarrow.core.billing.Purchases
+import ca.kallistesoft.unarrow.core.data.DailyResult
 import ca.kallistesoft.unarrow.core.data.ProgressRepository
 import ca.kallistesoft.unarrow.core.data.Today
 import ca.kallistesoft.unarrow.core.game.Levels
@@ -12,6 +13,7 @@ import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 import javax.inject.Inject
@@ -27,11 +29,17 @@ data class HomeUiState(
     val removeAdsPrice: String? = null,
     /** A rewarded ad is ready: a solved daily can be played again after watching it. */
     val rewardedReady: Boolean = false,
+    /** Today's result, once today's daily is solved. */
+    val dailyResult: DailyResult? = null,
+    /** Records: every star earned (the best of each level) and the longest daily streak. */
+    val totalStars: Int = 0,
+    val bestStreak: Int = 0,
+    val soundOn: Boolean = true,
 )
 
 @HiltViewModel
 class HomeViewModel @Inject constructor(
-    progress: ProgressRepository,
+    private val progress: ProgressRepository,
     private val purchases: Purchases,
     private val rewarded: RewardedAds,
     today: Today,
@@ -51,6 +59,10 @@ class HomeViewModel @Inject constructor(
             removeAdsOwned = p.removeAdsOwned,
             removeAdsPrice = prices[Product.REMOVE_ADS],
             rewardedReady = rewardedReady,
+            dailyResult = p.dailyResult(day),
+            totalStars = p.totalStars,
+            bestStreak = p.bestDailyStreak,
+            soundOn = p.soundOn,
         )
     }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), HomeUiState())
 
@@ -60,6 +72,11 @@ class HomeViewModel @Inject constructor(
      */
     fun retryDaily(onRetry: () -> Unit) {
         viewModelScope.launch { if (rewarded.showRewarded()) onRetry() }
+    }
+
+    /** The home's sound button: the same setting as in Settings. */
+    fun toggleSound() {
+        viewModelScope.launch { progress.setSound(!progress.progress.first().soundOn) }
     }
 
     fun buyRemoveAds() {
