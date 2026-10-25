@@ -10,6 +10,7 @@ android {
 // Shared test doubles and rules (testImplementation in the modules that use them).
 dependencies {
     api(project(":core:ads"))
+    api(project(":core:billing"))
     api(project(":core:data"))
     api(project(":core:flags"))
     api(libs.androidx.compose.ui.test.junit4)

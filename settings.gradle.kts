@@ -31,6 +31,7 @@ rootProject.name = "Unarrow"
 enableFeaturePreview("TYPESAFE_PROJECT_ACCESSORS")
 
 include(":core:ads")
+include(":core:billing")
 include(":core:common")
 include(":core:flags")
 include(":core:game")

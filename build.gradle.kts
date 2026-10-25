@@ -18,6 +18,7 @@ plugins {
 dependencies {
     listOf(
         ":core:ads",
+        ":core:billing",
         ":core:common",
         ":core:data",
         ":core:flags",
