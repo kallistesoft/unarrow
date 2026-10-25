@@ -36,6 +36,14 @@ class BoardTest {
     }
 
     @Test
+    fun `rounds count the waves of free arrows, and -1 when the board is stuck`() {
+        assertEquals(2, board.rounds()) // ↑ and → first, then ←
+        assertEquals(0, Board(1, 1, emptyList()).rounds())
+        val facing = Board(1, 2, listOf(Arrow(0, 0, 0, Direction.RIGHT), Arrow(1, 0, 1, Direction.LEFT)))
+        assertEquals(-1, facing.rounds())
+    }
+
+    @Test
     fun `tapping an arrow that is gone misses`() {
         assertEquals(TapResult.Missed, board.tap(42))
     }

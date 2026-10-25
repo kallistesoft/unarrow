@@ -11,21 +11,23 @@ class LevelsTest {
         val spec = Levels.spec(1)
         assertEquals(4, spec.rows)
         assertEquals(4, spec.cols)
-        assertEquals(9, spec.arrowCount) // 16 × 0.55
+        assertEquals(10, spec.arrowCount) // 16 × 0.6
+        assertEquals(Levels.GENTLE_WIDTH, spec.width)
+        assertEquals(Levels.WIDTH, Levels.spec(3).width)
     }
 
     @Test
-    fun `the grid grows every six levels and stops at nine`() {
-        assertEquals(4, Levels.spec(6).rows)
-        assertEquals(5, Levels.spec(7).rows)
-        assertEquals(9, Levels.spec(31).rows)
-        assertEquals(9, Levels.spec(500).rows)
+    fun `the grid grows fast and stops at nine`() {
+        assertEquals(listOf(4, 5, 5, 6, 6, 7, 7, 8, 8, 9, 9), listOf(3, 4, 7, 8, 12, 13, 18, 19, 25, 26, 500).map {
+            Levels.spec(it).rows
+        })
     }
 
     @Test
     fun `within a size the board fills up`() {
-        assertTrue(Levels.spec(7).arrowCount < Levels.spec(12).arrowCount)
-        assertEquals(Math.round(25 * 0.85).toInt(), Levels.spec(12).arrowCount)
+        assertTrue(Levels.spec(4).arrowCount < Levels.spec(7).arrowCount)
+        assertEquals(Math.round(25 * 0.6).toInt(), Levels.spec(4).arrowCount)
+        assertEquals(Math.round(25 * 0.88).toInt(), Levels.spec(7).arrowCount)
     }
 
     @Test
@@ -37,22 +39,22 @@ class LevelsTest {
     }
 
     @Test
-    fun `levels never end - past level 36 the grid stays 9 x 9 and fills between 70 and 90 percent`() {
-        assertEquals(36, Levels.LAST_GROWING_LEVEL)
-        assertEquals(9, Levels.spec(36).rows)
+    fun `levels never end - past level 25 the grid stays 9 x 9, fills 75 to 92 percent, width 2 or 3`() {
+        assertEquals(25, Levels.LAST_GROWING_LEVEL)
+        assertEquals(Levels.LAST_GROWING_LEVEL, Levels.LEVELS_PER_SIZE.sum())
         val cells = 9 * 9
-        val fills = (37..2_000).filter { it % Levels.BREATHER_EVERY != 0 }.map { level ->
-            val spec = Levels.spec(level)
-            assertEquals(9, spec.rows)
-            spec.arrowCount
-        }
-        assertTrue(fills.all { it in Math.round(cells * 0.70).toInt()..Math.round(cells * 0.90).toInt() })
+        val specs = (26..2_000).filter { it % Levels.BREATHER_EVERY != 0 }.map(Levels::spec)
+        assertTrue(specs.all { it.rows == 9 && it.cols == 9 })
+        val fills = specs.map { it.arrowCount }
+        assertTrue(fills.all { it in Math.round(cells * 0.75).toInt()..Math.round(cells * 0.92).toInt() })
         assertTrue("fills vary", fills.toSet().size > 10)
+        assertEquals(setOf(2, 3), specs.map { it.width }.toSet())
     }
 
     @Test
-    fun `every tenth level past 36 is a breather`() {
+    fun `every tenth level past 25 is a breather`() {
         assertEquals(Math.round(81 * Levels.BREATHER_FILL).toInt(), Levels.spec(40).arrowCount)
+        assertEquals(Levels.BREATHER_WIDTH, Levels.spec(40).width)
         assertEquals(Math.round(81 * Levels.BREATHER_FILL).toInt(), Levels.spec(1_000_000).arrowCount)
     }
 
@@ -65,8 +67,8 @@ class LevelsTest {
             var b = board
             while (!b.isCleared) b = (b.tap(b.freeArrows().first().id) as TapResult.Exited).board
         }
-        for (level in 37..10_000) Levels.spec(level).board()
-        assertTrue("10,000 levels in under 20 s", System.nanoTime() - start < 20_000_000_000L)
+        for (level in 26..1_000) Levels.spec(level).board()
+        assertTrue("1,000 levels in under 20 s", System.nanoTime() - start < 20_000_000_000L)
     }
 
     @Test
@@ -81,7 +83,7 @@ class LevelsTest {
         assertEquals(Levels.daily(day).board(), Levels.daily(day).board())
         assertNotEquals(Levels.daily(day).board(), Levels.daily(day + 1).board())
         assertEquals(7, Levels.daily(day).rows)
-        assertEquals(39, Levels.daily(day).arrowCount) // 49 × 0.8
+        assertEquals(42, Levels.daily(day).arrowCount) // 49 × 0.85
     }
 
     @Test

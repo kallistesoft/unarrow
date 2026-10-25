@@ -27,6 +27,22 @@ data class Board(val rows: Int, val cols: Int, val arrows: List<Arrow>) {
     /** The arrows that can leave now: the hints. */
     fun freeArrows(): List<Arrow> = arrows.filter(::canExit)
 
+    /**
+     * How many rounds clear the board when every free arrow is taken off at once, round after round: the length of its
+     * longest chain of arrows waiting on each other. -1 when the board can't be cleared.
+     */
+    fun rounds(): Int {
+        var board = this
+        var rounds = 0
+        while (!board.isCleared) {
+            val free = board.freeArrows().toSet()
+            if (free.isEmpty()) return -1
+            board = board.copy(arrows = board.arrows - free)
+            rounds++
+        }
+        return rounds
+    }
+
     /** How many cells [arrow] travels to get off the board. */
     fun exitDistance(arrow: Arrow): Int = when (arrow.direction) {
         Direction.UP -> arrow.row + 1

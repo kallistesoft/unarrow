@@ -11,6 +11,8 @@ Each arrow on the grid slides off the board when tapped, if nothing stands betwe
 Tapping a blocked arrow costs one of three lives. Puzzles are generated in reverse (`core/game`, `PuzzleGenerator`),
 so every one is solvable, and the same seed always gives the same board: level *n* and the daily puzzle of a given
 day are identical on every device and in every version (`SeededRandom` is SplitMix64, never `kotlin.random`).
+The generator keeps few arrows free at a time and builds long chains of arrows waiting on each other (about one in
+seven arrows free at the start, 15–25 rounds on a 9 × 9); `DifficultyTest` guards those numbers.
 
 ## Modules
 

@@ -34,9 +34,16 @@ class PuzzleGeneratorTest {
     }
 
     @Test
-    fun `puzzles are not all free at the start`() {
-        val board = Levels.spec(20).board()
-        assertTrue(board.freeArrows().size < board.arrows.size)
+    fun `a narrower width makes longer chains`() {
+        val chain = PuzzleGenerator.generate(6, 6, 25, SeededRandom(5), width = 1)
+        val wide = PuzzleGenerator.generate(6, 6, 25, SeededRandom(5), width = 6)
+        assertTrue("${chain.rounds()} vs ${wide.rounds()}", chain.rounds() > wide.rounds())
+        assertTrue(chain.freeArrows().size <= wide.freeArrows().size)
+    }
+
+    @Test(expected = IllegalArgumentException::class)
+    fun `no free arrow at all is refused`() {
+        PuzzleGenerator.generate(4, 4, 5, SeededRandom(1), width = 0)
     }
 
     @Test(expected = IllegalArgumentException::class)
