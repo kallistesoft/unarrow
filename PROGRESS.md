@@ -3,9 +3,9 @@
 Claude updates this file and pushes it after every step. Work happens on the `develop` branch; there will be no pull
 request until the release.
 
-**Now:** the release (R8) build, the last red CI step.
-**CI:** run #9: every module compiles, all unit tests pass, coverage ≥ 90% per class, lint clean; release build fixed in
-the next run.
+**Now:** the app is built; waiting on the console steps below for the release.
+**CI:** ✅ green (run #10): conventions, all unit tests, coverage ≥ 90% per class, lint, debug APK, release APK and
+bundle (R8). The APKs and the `.aab` are in the run's `unarrow-<n>` artifact.
 **Blockers:** none. This build environment can't download the Android SDK, so the code is compiled and tested only by
 GitHub Actions, on every push.
 
@@ -31,9 +31,9 @@ GitHub Actions, on every push.
 | 16 | Languages: en, fr-FR, fr-CA complete, missing-key check | ✅ | 714661e |
 | 17 | Polish: slide-out animation, haptics, sounds, launcher icon | ✅ | 31e8ef8 |
 | 17b | Endless levels: 9×9 past level 36, fill drawn per level (70–90%), a lighter level every 10 | ✅ | 31e8ef8 |
-| 18 | Coverage at 90% (Kover), lint clean, release (R8) build | ⏳ R8 | |
+| 18 | Coverage at 90% (Kover), lint clean, release (R8) build | ✅ | 70ca30f |
 | 19 | Store listing texts (en-US, fr-CA, fr-FR) and Data safety notes in `store/` | ✅ | 31e8ef8 |
-| 20 | Release: pull request `develop` → `main` | ⬜ | |
+| 20 | Release: real AdMob IDs, Firebase config, signed bundle, pull request `develop` → `main` | ⬜ waits on you | |
 
 ✅ done · ⏳ in progress · ⬜ to do · ❌ blocked
 
@@ -63,3 +63,4 @@ Firebase (no force update or Crashlytics), and with no purchases shown.
 - 2026-10-25: engine, storage, strings (3 languages), ads, billing, force update, review, sharing, all screens and
   the app written; CI is the compiler (this environment can't download the Android SDK).
 - 2026-10-25: CI green on tests, coverage and lint (run #9); endless level curve; sounds; store texts.
+- 2026-10-25: CI fully green (run #10), release bundle built with R8.
