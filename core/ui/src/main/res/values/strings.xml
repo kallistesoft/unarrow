@@ -11,6 +11,7 @@
     <string name="home_daily_number">Daily #%1$d</string>
     <string name="home_daily_new">A new puzzle every day</string>
     <string name="home_daily_done">Solved today. Come back tomorrow!</string>
+    <string name="home_daily_retry_ad">Play again (ad)</string>
     <plurals name="home_streak">
         <item quantity="one">%d-day streak</item>
         <item quantity="other">%d-day streak</item>

@@ -12,6 +12,7 @@
     <string name="home_daily_number">Défi n° %1$d</string>
     <string name="home_daily_new">Un nouveau casse-tête chaque jour</string>
     <string name="home_daily_done">Réussi aujourd’hui. Revenez demain !</string>
+    <string name="home_daily_retry_ad">Rejouer (pub)</string>
     <plurals name="home_streak">
         <item quantity="one">%d jour d’affilée</item>
         <item quantity="many">%d jours d’affilée</item>

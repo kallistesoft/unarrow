@@ -101,3 +101,5 @@ Still open:
   (exits only, memoised) checks every board has a perfect line, picks boards with traps, measures difficulty and
   gives the hints. Locks from level 10, rotating arrows from 20, the daily mixes all three; tips the first time each
   appears; boards are made off the main thread. Seed salts bumped again: every board changed.
+- 2026-10-25: a solved daily can no longer be reopened from its card (it could be replayed for free); "Play again
+  (ad)" replays it after a rewarded ad. The streak never counts a day twice; a replay can only improve the best daily.

@@ -7,5 +7,6 @@ android {
 }
 
 dependencies {
+    implementation(project(":core:ads"))
     implementation(project(":core:billing"))
 }

@@ -1,7 +1,9 @@
 package ca.kallistesoft.unarrow.feature.home
 
+import androidx.compose.ui.test.assertIsNotEnabled
 import androidx.compose.ui.test.junit4.createComposeRule
 import androidx.compose.ui.test.onNodeWithContentDescription
+import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
 import ca.kallistesoft.unarrow.core.billing.Product
@@ -9,6 +11,7 @@ import ca.kallistesoft.unarrow.core.data.DailyResult
 import ca.kallistesoft.unarrow.core.data.GameProgress
 import ca.kallistesoft.unarrow.core.designsystem.UnarrowTheme
 import ca.kallistesoft.unarrow.core.game.Levels
+import ca.kallistesoft.unarrow.core.testing.FakeAds
 import ca.kallistesoft.unarrow.core.testing.FakeProgressRepository
 import ca.kallistesoft.unarrow.core.testing.FakePurchases
 import ca.kallistesoft.unarrow.core.testing.MainDispatcherRule
@@ -42,7 +45,7 @@ class HomeTest {
             today = today,
         )
         val purchases = FakePurchases()
-        val vm = HomeViewModel(progress, purchases, { today })
+        val vm = HomeViewModel(progress, purchases, FakeAds(), { today })
         collecting(vm.uiState)
         val state = vm.uiState.value
         assertEquals(9, state.level)
@@ -57,6 +60,27 @@ class HomeTest {
         progress.completeDaily(DailyResult(stars = 3, seconds = 42))
         assertTrue(vm.uiState.value.dailyDone)
         assertEquals(4, vm.uiState.value.streak)
+    }
+
+    @Test
+    fun `a solved daily can be played again after a rewarded ad, without growing the streak`() = runTest {
+        val progress = FakeProgressRepository(GameProgress(dailyStreak = 2, lastDailyDay = today), today = today)
+        val ads = FakeAds()
+        val vm = HomeViewModel(progress, FakePurchases(), ads, { today })
+        collecting(vm.uiState)
+        assertTrue(vm.uiState.value.rewardedReady)
+        var retries = 0
+
+        vm.retryDaily { retries++ }
+        assertEquals(1, retries)
+
+        ads.earn = false
+        vm.retryDaily { retries++ }
+        assertEquals("an ad closed early doesn't reopen the daily", 1, retries)
+        assertEquals(2, ads.rewardedShown)
+
+        progress.completeDaily(DailyResult(stars = 3, seconds = 30))
+        assertEquals(2, vm.uiState.value.streak)
     }
 
     @Test
@@ -83,13 +107,14 @@ class HomeTest {
     }
 
     @Test
-    fun `a solved daily and bought ads say so`() {
+    fun `a solved daily and bought ads say so, and the daily can't be played again`() {
+        var dailyClicks = 0
         compose.setContent {
             UnarrowTheme {
                 HomeContent(
-                    HomeUiState(loading = false, dailyDone = true, removeAdsOwned = true),
+                    HomeUiState(loading = false, dailyNumber = 7, dailyDone = true, removeAdsOwned = true),
                     onPlay = {},
-                    onDaily = {},
+                    onDaily = { dailyClicks++ },
                     onSettings = {},
                     onRemoveAds = {},
                 )
@@ -98,6 +123,42 @@ class HomeTest {
         compose.onNodeWithText("Solved today. Come back tomorrow!").assertExists()
         compose.onNodeWithText("No ads. Thank you!").assertExists()
         compose.onNodeWithText("Daily puzzle").assertDoesNotExist()
+        compose.onNodeWithTag("daily").assertIsNotEnabled()
+        compose.onNodeWithText("Daily #7").performClick()
+        assertEquals(0, dailyClicks)
+        compose.onNodeWithText("Play again (ad)").assertDoesNotExist()
+    }
+
+    @Test
+    fun `the home screen replays a solved daily after a rewarded ad`() {
+        val progress = FakeProgressRepository(GameProgress(dailyStreak = 1, lastDailyDay = today), today = today)
+        val vm = HomeViewModel(progress, FakePurchases(), FakeAds(), { today })
+        var dailies = 0
+        compose.setContent {
+            UnarrowTheme { HomeScreen(onPlay = {}, onDaily = { dailies++ }, onSettings = {}, viewModel = vm) }
+        }
+        compose.onNodeWithText("Play again (ad)").performClick()
+        compose.waitForIdle()
+        assertEquals(1, dailies)
+    }
+
+    @Test
+    fun `a solved daily offers a replay for an ad when one is ready`() {
+        var retries = 0
+        compose.setContent {
+            UnarrowTheme {
+                HomeContent(
+                    HomeUiState(loading = false, dailyDone = true, rewardedReady = true),
+                    onPlay = {},
+                    onDaily = {},
+                    onSettings = {},
+                    onRemoveAds = {},
+                    onRetryDaily = { retries++ },
+                )
+            }
+        }
+        compose.onNodeWithText("Play again (ad)").performClick()
+        assertEquals(1, retries)
     }
 
     @Test

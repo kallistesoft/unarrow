@@ -54,7 +54,14 @@ fun HomeScreen(
     viewModel: HomeViewModel = hiltViewModel(),
 ) {
     val state by viewModel.uiState.collectAsStateWithLifecycle()
-    HomeContent(state, onPlay, onDaily, onSettings, onRemoveAds = viewModel::buyRemoveAds)
+    HomeContent(
+        state,
+        onPlay,
+        onDaily,
+        onSettings,
+        onRemoveAds = viewModel::buyRemoveAds,
+        onRetryDaily = { viewModel.retryDaily(onDaily) },
+    )
 }
 
 @Composable
@@ -65,6 +72,7 @@ internal fun HomeContent(
     onSettings: () -> Unit,
     onRemoveAds: () -> Unit,
     modifier: Modifier = Modifier,
+    onRetryDaily: () -> Unit = {},
 ) {
     Scaffold(modifier.testTag("home"), contentWindowInsets = WindowInsets.safeDrawing) { padding ->
         Box(
@@ -101,7 +109,7 @@ internal fun HomeContent(
                     onClick = onPlay,
                     enabled = !state.loading,
                 )
-                DailyCard(state, onDaily)
+                DailyCard(state, onDaily, onRetryDaily)
                 when {
                     state.removeAdsOwned -> Text(
                         stringResource(R.string.home_ads_removed),
@@ -120,12 +128,21 @@ internal fun HomeContent(
 }
 
 @Composable
-private fun DailyCard(state: HomeUiState, onDaily: () -> Unit) {
+private fun DailyCard(state: HomeUiState, onDaily: () -> Unit, onRetryDaily: () -> Unit) {
+    // Once today's daily is solved the card only shows the result: one try per day, so the streak and the best daily
+    // can't be replayed.
+    val container = MaterialTheme.colorScheme.surfaceContainerHigh
+    val content = MaterialTheme.colorScheme.onSurface
     Card(
         onClick = onDaily,
-        enabled = !state.loading,
+        enabled = !state.loading && !state.dailyDone,
         shape = MaterialTheme.shapes.large,
-        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceContainerHigh),
+        colors = CardDefaults.cardColors(
+            containerColor = container,
+            contentColor = content,
+            disabledContainerColor = container,
+            disabledContentColor = content,
+        ),
         modifier = Modifier.fillMaxWidth().testTag("daily"),
     ) {
         Column(Modifier.padding(Spacing.xl), verticalArrangement = Arrangement.spacedBy(Spacing.s)) {
@@ -163,6 +180,8 @@ private fun DailyCard(state: HomeUiState, onDaily: () -> Unit) {
             }
             if (!state.dailyDone) {
                 SecondaryButton(stringResource(R.string.home_daily), onClick = onDaily, enabled = !state.loading)
+            } else if (state.rewardedReady) {
+                SecondaryButton(stringResource(R.string.home_daily_retry_ad), onClick = onRetryDaily)
             }
         }
     }
