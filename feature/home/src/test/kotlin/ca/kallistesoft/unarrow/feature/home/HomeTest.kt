@@ -218,6 +218,10 @@ class HomeTest {
         compose.onNodeWithContentDescription("Level: 21").assertExists()
         compose.onNodeWithContentDescription("Stars: 58").assertExists()
         compose.onNodeWithContentDescription("Best streak: 9").assertExists()
+        val widths = listOf("Level: 21", "Stars: 58", "Best streak: 9").map {
+            compose.onNodeWithContentDescription(it).fetchSemanticsNode().boundsInRoot.width
+        }
+        assertTrue("equal columns: $widths", widths.max() - widths.min() <= 1f) // pixels left over by the division
         compose.onNodeWithContentDescription("Unarrow").assertExists()
         compose.onNodeWithText("A blocked arrow slides to the obstacle and costs a life.").performScrollTo().assertExists()
         compose.onNodeWithText("A locked arrow waits until the key of its colour has left.").assertExists()

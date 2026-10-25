@@ -252,19 +252,20 @@ private fun Title() {
 /** The player's records: highest level, every star earned, the longest daily streak. */
 @Composable
 private fun Records(state: HomeUiState) {
-    Row(Modifier.fillMaxWidth().testTag("records"), horizontalArrangement = Arrangement.SpaceEvenly) {
-        Record(state.level, R.string.home_record_level)
-        Record(state.totalStars, R.string.home_record_stars)
-        Record(state.bestStreak, R.string.home_record_streak)
+    // Three equal columns: a long label ("BEST STREAK") wraps instead of widening its column.
+    Row(Modifier.fillMaxWidth().testTag("records")) {
+        Record(state.level, R.string.home_record_level, Modifier.weight(1f))
+        Record(state.totalStars, R.string.home_record_stars, Modifier.weight(1f))
+        Record(state.bestStreak, R.string.home_record_streak, Modifier.weight(1f))
     }
 }
 
 @Composable
-private fun Record(value: Int, label: Int) {
+private fun Record(value: Int, label: Int, modifier: Modifier = Modifier) {
     val name = stringResource(label)
     val spoken = stringResource(R.string.home_record_label, name, value)
     Column(
-        Modifier.clearAndSetSemantics { contentDescription = spoken },
+        modifier.clearAndSetSemantics { contentDescription = spoken },
         horizontalAlignment = Alignment.CenterHorizontally,
     ) {
         Text(value.toString(), style = MaterialTheme.typography.headlineMedium)
