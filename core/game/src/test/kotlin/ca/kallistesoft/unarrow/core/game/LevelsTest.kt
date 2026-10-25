@@ -90,6 +90,13 @@ class LevelsTest {
         assertEquals(31, Levels.dailyNumber(Levels.FIRST_DAILY_EPOCH_DAY + 30))
     }
 
+    @Test
+    fun `days before the first daily are number 1`() {
+        assertEquals(1, Levels.dailyNumber(Levels.FIRST_DAILY_EPOCH_DAY - 1))
+        assertEquals(1, Levels.dailyNumber(Levels.FIRST_DAILY_EPOCH_DAY - 7)) // 2026-10-25 showed "Daily #-6"
+        assertEquals(1, Levels.dailyNumber(0))
+    }
+
     @Test(expected = IllegalArgumentException::class)
     fun `there is no level 0`() {
         Levels.spec(0)

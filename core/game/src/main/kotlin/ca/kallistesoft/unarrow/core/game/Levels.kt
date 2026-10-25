@@ -48,8 +48,11 @@ object Levels {
     fun daily(epochDay: Long): LevelSpec =
         LevelSpec(DAILY_SIZE, DAILY_SIZE, arrowCount(DAILY_SIZE, DAILY_FILL), seed = epochDay * DAILY_PRIME + DAILY_SALT)
 
-    /** The number shown and shared for the daily puzzle ("Unarrow Daily #12"). */
-    fun dailyNumber(epochDay: Long): Long = epochDay - FIRST_DAILY_EPOCH_DAY + 1
+    /**
+     * The number shown and shared for the daily puzzle ("Unarrow Daily #12"). Days before the first daily (a phone
+     * clock set back, testers before the launch) are #1, never 0 or negative.
+     */
+    fun dailyNumber(epochDay: Long): Long = maxOf(1, epochDay - FIRST_DAILY_EPOCH_DAY + 1)
 
     /** Past the growing levels: a breather every [BREATHER_EVERY] levels, otherwise a fill drawn from the seed. */
     private fun endlessFill(level: Int, seed: Long): Double {
