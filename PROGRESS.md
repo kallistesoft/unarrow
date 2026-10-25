@@ -103,3 +103,4 @@ Still open:
   appears; boards are made off the main thread. Seed salts bumped again: every board changed.
 - 2026-10-25: a solved daily can no longer be reopened from its card (it could be replayed for free); "Play again
   (ad)" replays it after a rewarded ad. The streak never counts a day twice; a replay can only improve the best daily.
+- 2026-10-25: the banner strip runs to the bottom edge, behind the gesture bar; the ad itself stays above it.

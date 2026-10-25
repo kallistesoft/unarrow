@@ -2,15 +2,18 @@ package ca.kallistesoft.unarrow.feature.game
 
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.slideInVertically
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxScope
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.WindowInsets
+import androidx.compose.foundation.layout.WindowInsetsSides
 import androidx.compose.foundation.layout.consumeWindowInsets
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.only
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.safeDrawing
 import androidx.compose.foundation.layout.size
@@ -47,18 +50,18 @@ import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.LifecycleResumeEffect
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import ca.kallistesoft.unarrow.core.data.DailyResult
-import ca.kallistesoft.unarrow.core.game.Stars
+import ca.kallistesoft.unarrow.core.designsystem.PreviewSurface
 import ca.kallistesoft.unarrow.core.designsystem.PrimaryButton
 import ca.kallistesoft.unarrow.core.designsystem.SecondaryButton
 import ca.kallistesoft.unarrow.core.designsystem.Sizes
 import ca.kallistesoft.unarrow.core.designsystem.Spacing
 import ca.kallistesoft.unarrow.core.designsystem.TertiaryButton
 import ca.kallistesoft.unarrow.core.designsystem.UnarrowPreviews
-import ca.kallistesoft.unarrow.core.designsystem.PreviewSurface
 import ca.kallistesoft.unarrow.core.designsystem.UnarrowTheme
 import ca.kallistesoft.unarrow.core.designsystem.topBar
 import ca.kallistesoft.unarrow.core.engagement.PLAY_STORE_URL
 import ca.kallistesoft.unarrow.core.game.Levels
+import ca.kallistesoft.unarrow.core.game.Stars
 import ca.kallistesoft.unarrow.core.ui.R
 import kotlinx.coroutines.launch
 
@@ -122,13 +125,15 @@ internal fun GameContent(
     banner: @Composable (Modifier) -> Unit = {},
 ) {
     val session = state.session
+    // The bottom inset is left to the content: the banner's strip runs to the screen's edge, behind the gesture bar.
     Scaffold(
         modifier.testTag("game"),
-        contentWindowInsets = WindowInsets.safeDrawing,
+        contentWindowInsets = WindowInsets.safeDrawing.only(WindowInsetsSides.Horizontal + WindowInsetsSides.Top),
         topBar = { GameTopBar(session, actions.onBack) },
     ) { padding ->
+        val bottomBar = WindowInsets.safeDrawing.only(WindowInsetsSides.Bottom)
         if (session == null) {
-            Box(Modifier.fillMaxSize().padding(padding), contentAlignment = Alignment.Center) {
+            Box(Modifier.fillMaxSize().padding(padding).windowInsetsPadding(bottomBar), contentAlignment = Alignment.Center) {
                 CircularProgressIndicator()
             }
             return@Scaffold
@@ -136,11 +141,22 @@ internal fun GameContent(
         Haptics(session, state.hapticsOn)
         Sounds(session, state.soundOn)
         Column(Modifier.fillMaxSize().padding(padding).consumeWindowInsets(padding)) {
-            Box(Modifier.weight(1f).fillMaxWidth()) {
+            Box(Modifier.weight(1f).fillMaxWidth().then(if (state.banner) Modifier else Modifier.windowInsetsPadding(bottomBar))) {
                 PlayArea(state, session, actions)
             }
-            // Under the play area, never over it: the strip takes room only while a banner shows.
-            if (state.banner) banner(Modifier.fillMaxWidth())
+            // Under the play area, never over it: the strip takes room only while a banner shows. Its background reaches
+            // the screen's bottom edge; the ad itself stays above the gesture bar (no ad under system UI).
+            if (state.banner) {
+                Box(
+                    Modifier
+                        .fillMaxWidth()
+                        .background(MaterialTheme.colorScheme.surfaceContainerHighest)
+                        .windowInsetsPadding(bottomBar)
+                        .testTag("banner_strip"),
+                ) {
+                    banner(Modifier.fillMaxWidth())
+                }
+            }
         }
     }
 }
