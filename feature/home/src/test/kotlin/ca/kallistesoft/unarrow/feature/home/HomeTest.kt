@@ -5,6 +5,7 @@ import androidx.compose.ui.test.onNodeWithContentDescription
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
 import ca.kallistesoft.unarrow.core.billing.Product
+import ca.kallistesoft.unarrow.core.data.DailyResult
 import ca.kallistesoft.unarrow.core.data.GameProgress
 import ca.kallistesoft.unarrow.core.designsystem.UnarrowTheme
 import ca.kallistesoft.unarrow.core.game.Levels
@@ -53,7 +54,7 @@ class HomeTest {
         vm.buyRemoveAds()
         assertEquals(listOf(Product.REMOVE_ADS), purchases.bought)
 
-        progress.completeDaily()
+        progress.completeDaily(DailyResult(stars = 3, seconds = 42))
         assertTrue(vm.uiState.value.dailyDone)
         assertEquals(4, vm.uiState.value.streak)
     }

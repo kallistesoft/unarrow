@@ -57,11 +57,20 @@
     <string name="game_retry">Réessayer</string>
     <string name="game_extra_life">Regarder une pub : +1 vie</string>
     <string name="game_get_hints">Obtenir 10 indices</string>
+    <string name="game_time">%1$d:%2$02d</string>
+    <string name="game_time_label">Temps %1$s</string>
+    <plurals name="game_stars">
+        <item quantity="one">%d étoile</item>
+        <item quantity="many">%d étoiles</item>
+        <item quantity="other">%d étoiles</item>
+    </plurals>
+    <string name="game_best">Meilleur : %1$s</string>
+    <string name="game_target">3 étoiles : aucune erreur, en moins de %1$s</string>
     <string name="game_tutorial">Touchez une flèche pour la faire glisser. Elle ne sort que si rien ne lui barre la route.</string>
 
     <!-- Partage -->
     <string name="share_level">J’ai réussi le niveau %1$d d’Unarrow %2$s</string>
-    <string name="share_daily">Unarrow, défi n° %1$d ✅ %2$s</string>
+    <string name="share_daily">Unarrow, défi n° %1$d %2$s</string>
     <string name="share_play">À vous de jouer : %1$s</string>
     <string name="share_chooser">Partager votre résultat</string>
 

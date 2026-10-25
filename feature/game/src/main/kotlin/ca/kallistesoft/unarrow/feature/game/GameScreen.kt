@@ -20,6 +20,8 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.rounded.ArrowBack
 import androidx.compose.material.icons.rounded.Favorite
 import androidx.compose.material.icons.rounded.FavoriteBorder
+import androidx.compose.material.icons.rounded.Star
+import androidx.compose.material.icons.rounded.StarBorder
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -42,7 +44,10 @@ import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.style.TextAlign
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
+import androidx.lifecycle.compose.LifecycleResumeEffect
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import ca.kallistesoft.unarrow.core.data.DailyResult
+import ca.kallistesoft.unarrow.core.game.Stars
 import ca.kallistesoft.unarrow.core.designsystem.PrimaryButton
 import ca.kallistesoft.unarrow.core.designsystem.SecondaryButton
 import ca.kallistesoft.unarrow.core.designsystem.Sizes
@@ -67,6 +72,11 @@ fun GameScreen(
     ),
 ) {
     val state by viewModel.uiState.collectAsStateWithLifecycle()
+    // The clock runs only while the screen is resumed: not in the background, nor under an ad's activity.
+    LifecycleResumeEffect(viewModel) {
+        viewModel.startClock()
+        onPauseOrDispose { viewModel.stopClock() }
+    }
     val scope = rememberCoroutineScope()
     GameContent(
         state,
@@ -197,7 +207,20 @@ private fun GameTopBar(session: GameSession?, onBack: () -> Unit) {
             style = MaterialTheme.typography.titleLarge,
             modifier = Modifier.weight(1f).padding(start = Spacing.s),
         )
-        if (session != null) Lives(session.lives)
+        if (session != null) {
+            val time = timeText(session.seconds)
+            val label = stringResource(R.string.game_time_label, time)
+            Text(
+                time,
+                style = MaterialTheme.typography.labelLarge,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                modifier = Modifier
+                    .padding(end = Spacing.m)
+                    .testTag("time")
+                    .semantics { contentDescription = label },
+            )
+            Lives(session.lives)
+        }
     }
 }
 
@@ -263,11 +286,21 @@ private fun ResultPanel(state: GameUiState, actions: GameActions) {
         ) {
             if (session.status == GameStatus.WON) {
                 Text(stringResource(R.string.game_won), style = MaterialTheme.typography.headlineMedium)
+                StarRow(session.stars)
                 Text(
-                    pluralStringResource(R.plurals.game_taps, session.taps, session.taps),
+                    timeText(session.seconds) + " · " + pluralStringResource(R.plurals.game_taps, session.taps, session.taps),
                     style = MaterialTheme.typography.bodyLarge,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                 )
+                Best(state, session)
+                if (session.stars < Stars.MAX) {
+                    Text(
+                        stringResource(R.string.game_target, timeText(Stars.targetSeconds(session.startArrowCount))),
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        textAlign = TextAlign.Center,
+                    )
+                }
                 if (session.mode == GameMode.LEVELS) {
                     PrimaryButton(stringResource(R.string.game_next), onClick = actions.onNext)
                 } else {
@@ -293,11 +326,10 @@ private fun ResultPanel(state: GameUiState, actions: GameActions) {
     }
 }
 
-/** "Unarrow Daily #12 ✅ ❤️❤️🤍 41 taps", then the Play Store link. */
+/** "Unarrow Daily #12 ★★☆ 0:42", then the Play Store link. */
 @Composable
 internal fun shareText(session: GameSession): String {
-    val hearts = HEART.repeat(session.lives) + EMPTY_HEART.repeat(MAX_LIVES - session.lives)
-    val summary = hearts + " " + pluralStringResource(R.plurals.game_taps, session.taps, session.taps)
+    val summary = starText(session.stars) + " " + timeText(session.seconds)
     val result = if (session.mode == GameMode.DAILY) {
         stringResource(R.string.share_daily, session.dailyNumber, summary)
     } else {
@@ -321,8 +353,53 @@ private fun Haptics(session: GameSession, enabled: Boolean) {
 /** Levels that explain the rule above the board. */
 internal const val TUTORIAL_LEVELS = 2
 
-private const val HEART = "❤️"
-private const val EMPTY_HEART = "🤍"
+private const val STAR = "★"
+private const val EMPTY_STAR = "☆"
+
+/** "★★☆": [stars] out of 3, for sharing and the best result. */
+internal fun starText(stars: Int): String = STAR.repeat(stars) + EMPTY_STAR.repeat(Stars.MAX - stars)
+
+/** "1:05". */
+@Composable
+internal fun timeText(seconds: Int): String = stringResource(R.string.game_time, seconds / 60, seconds % 60)
+
+/** [stars] filled out of 3, read out as "2 stars". */
+@Composable
+private fun StarRow(stars: Int) {
+    val label = pluralStringResource(R.plurals.game_stars, stars, stars)
+    Row(
+        Modifier.testTag("stars").semantics(mergeDescendants = true) { contentDescription = label },
+        horizontalArrangement = Arrangement.spacedBy(Spacing.xs),
+    ) {
+        repeat(Stars.MAX) { index ->
+            Icon(
+                if (index < stars) Icons.Rounded.Star else Icons.Rounded.StarBorder,
+                contentDescription = null,
+                tint = UnarrowTheme.gameColors.star,
+                modifier = Modifier.size(Sizes.touchTarget),
+            )
+        }
+    }
+}
+
+/** The best result so far, when this one didn't beat it: a level's most stars, or the best daily (stars and time). */
+@Composable
+private fun Best(state: GameUiState, session: GameSession) {
+    val best = when {
+        state.bestStars != null && state.bestStars > session.stars -> starText(state.bestStars)
+        state.bestDaily != null && state.bestDaily.beats(DailyResult(session.stars, session.seconds)) ->
+            bestDailyText(state.bestDaily)
+        else -> return
+    }
+    Text(
+        stringResource(R.string.game_best, best),
+        style = MaterialTheme.typography.titleSmall,
+        modifier = Modifier.testTag("best"),
+    )
+}
+
+@Composable
+private fun bestDailyText(best: DailyResult): String = starText(best.stars) + " " + timeText(best.seconds)
 
 @UnarrowPreviews
 @Composable
@@ -330,7 +407,7 @@ internal fun GamePreview() = PreviewSurface {
     val board = Levels.spec(14).board()
     GameContent(
         GameUiState(
-            session = GameSession(GameMode.LEVELS, 14, 0, board, board.arrows.size, lives = 2, hintId = board.freeArrows().first().id),
+            session = GameSession(GameMode.LEVELS, 14, 0, board, board.arrows.size, lives = 2, hintId = board.freeArrows().first().id, seconds = 37),
             hints = 3,
         ),
         GameActions(),

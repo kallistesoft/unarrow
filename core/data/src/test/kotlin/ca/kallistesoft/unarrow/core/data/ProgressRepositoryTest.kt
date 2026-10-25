@@ -23,8 +23,8 @@ class ProgressRepositoryTest {
     @Test
     fun `solving a level opens the next one and counts a win`() = runTest {
         val repo = repository()
-        repo.completeLevel(1)
-        repo.completeLevel(2)
+        repo.completeLevel(1, stars = 2)
+        repo.completeLevel(2, stars = 2)
         val p = repo.progress.first()
         assertEquals(3, p.level)
         assertEquals(2, p.wins)
@@ -33,20 +33,20 @@ class ProgressRepositoryTest {
     @Test
     fun `replaying an old level opens nothing new`() = runTest {
         val repo = repository()
-        repo.completeLevel(4)
-        repo.completeLevel(2)
+        repo.completeLevel(4, stars = 2)
+        repo.completeLevel(2, stars = 2)
         assertEquals(5, repo.progress.first().level)
     }
 
     @Test
     fun `the daily streak grows day after day and starts over after a missed day`() = runTest {
         val repo = repository()
-        repo.completeDaily()
+        repo.completeDaily(DailyResult(stars = 2, seconds = 90))
         day++
-        repo.completeDaily()
+        repo.completeDaily(DailyResult(stars = 2, seconds = 90))
         assertEquals(2, repo.progress.first().dailyStreak)
         day += 2
-        repo.completeDaily()
+        repo.completeDaily(DailyResult(stars = 2, seconds = 90))
         val p = repo.progress.first()
         assertEquals(1, p.dailyStreak)
         assertEquals(2, p.bestDailyStreak)
@@ -56,12 +56,40 @@ class ProgressRepositoryTest {
     @Test
     fun `solving the daily twice the same day counts once`() = runTest {
         val repo = repository()
-        repo.completeDaily()
-        repo.completeDaily()
+        repo.completeDaily(DailyResult(stars = 2, seconds = 90))
+        repo.completeDaily(DailyResult(stars = 2, seconds = 90))
         val p = repo.progress.first()
         assertEquals(1, p.dailyStreak)
         assertEquals(1, p.wins)
         assertTrue(p.dailyDone(day))
+    }
+
+    @Test
+    fun `each level keeps its best stars`() = runTest {
+        val repo = repository()
+        repo.completeLevel(3, stars = 2)
+        repo.completeLevel(3, stars = 1)
+        repo.completeLevel(4, stars = 3)
+        assertEquals(mapOf(3 to 2, 4 to 3), repo.progress.first().levelStars)
+        repo.completeLevel(3, stars = 3)
+        assertEquals(3, repo.progress.first().levelStars[3])
+    }
+
+    @Test
+    fun `the best daily is the most stars, then the fastest, even replayed the same day`() = runTest {
+        val repo = repository()
+        repo.completeDaily(DailyResult(stars = 2, seconds = 60))
+        day++
+        repo.completeDaily(DailyResult(stars = 3, seconds = 200))
+        assertEquals(DailyResult(3, 200), repo.progress.first().bestDaily)
+        repo.completeDaily(DailyResult(stars = 3, seconds = 150))
+        val p = repo.progress.first()
+        assertEquals(DailyResult(3, 150), p.bestDaily)
+        assertEquals("the same day counts once", 2, p.wins)
+        day++
+        repo.completeDaily(DailyResult(stars = 2, seconds = 10))
+        assertEquals(DailyResult(3, 150), repo.progress.first().bestDaily)
+        assertFalse(DailyResult(3, 150).beats(DailyResult(3, 150)))
     }
 
     @Test
@@ -100,7 +128,7 @@ class ProgressRepositoryTest {
     @Test
     fun `progress survives a write and read, unknown keys ignored`() = runTest {
         val out = ByteArrayOutputStream()
-        val progress = GameProgress(level = 12, hints = 7)
+        val progress = GameProgress(level = 12, hints = 7, levelStars = mapOf(3 to 2), bestDaily = DailyResult(3, 42))
         GameProgressSerializer.writeTo(progress, out)
         assertEquals(progress, GameProgressSerializer.readFrom(ByteArrayInputStream(out.toByteArray())))
         val withExtra = """{"level":3,"future":true}""".byteInputStream()

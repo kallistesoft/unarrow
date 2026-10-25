@@ -1,5 +1,6 @@
 package ca.kallistesoft.unarrow.feature.game
 
+import ca.kallistesoft.unarrow.core.data.DailyResult
 import ca.kallistesoft.unarrow.core.game.Arrow
 import ca.kallistesoft.unarrow.core.game.Board
 
@@ -34,6 +35,13 @@ data class GameSession(
     /** The last arrows that left, newest last, for the slide-out animation. */
     val exits: List<Arrow> = emptyList(),
     val status: GameStatus = GameStatus.PLAYING,
+    /** Time spent on the puzzle while it was on screen. */
+    val seconds: Int = 0,
+    /** Taps on blocked arrows. */
+    val mistakes: Int = 0,
+    val hintUsed: Boolean = false,
+    /** The rating once solved ([Stars]), 0 before. */
+    val stars: Int = 0,
 )
 
 data class GameUiState(
@@ -46,6 +54,10 @@ data class GameUiState(
     val hapticsOn: Boolean = true,
     /** The banner ad shows under the board (ads allowed, "Remove ads" not bought). */
     val banner: Boolean = false,
+    /** The most stars ever earned on this level (null: never solved, or a daily). */
+    val bestStars: Int? = null,
+    /** The best daily ever solved (dailies only). */
+    val bestDaily: DailyResult? = null,
 )
 
 const val MAX_LIVES = 3

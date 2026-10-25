@@ -13,6 +13,7 @@ import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.onRoot
 import androidx.compose.ui.test.captureToImage
 import androidx.compose.ui.test.performClick
+import ca.kallistesoft.unarrow.core.data.DailyResult
 import ca.kallistesoft.unarrow.core.designsystem.Sizes
 import ca.kallistesoft.unarrow.core.designsystem.UnarrowTheme
 import ca.kallistesoft.unarrow.core.game.Arrow
@@ -55,8 +56,9 @@ class GameScreenTest {
         lives: Int = MAX_LIVES,
         blocked: BlockedTap? = null,
         exits: List<Arrow> = emptyList(),
+        stars: Int = 0,
     ) = GameSession(mode, 5, 12, board, 4, lives = lives, taps = 6, hintId = up.id, blocked = blocked, exits = exits,
-        status = status)
+        status = status, seconds = 42, stars = stars)
 
     private fun show(state: GameUiState, actions: GameActions = GameActions()) =
         compose.setContent { UnarrowTheme { GameContent(state, actions) } }
@@ -67,6 +69,7 @@ class GameScreenTest {
         show(GameUiState(session(lives = 2), hints = 3), GameActions(onTap = { tapped += it }))
         compose.onNodeWithText("Level 5").assertExists()
         compose.onNodeWithContentDescription("2 lives left").assertExists()
+        compose.onNodeWithContentDescription("Time 0:42").assertExists()
         compose.onNodeWithContentDescription("Arrow pointing up").performClick()
         compose.onNodeWithContentDescription("Arrow pointing left").performClick()
         assertEquals(listOf(up.id, left.id), tapped)
@@ -110,16 +113,26 @@ class GameScreenTest {
         var next = 0
         val shared = mutableListOf<String>()
         show(
-            GameUiState(session(status = GameStatus.WON, lives = 2)),
+            GameUiState(session(status = GameStatus.WON, lives = 2, stars = 2), bestStars = 3),
             GameActions(onNext = { next++ }, onShare = { text, _ -> shared += text }),
         )
         compose.onNodeWithText("Solved!").assertExists()
-        compose.onNodeWithText("6 taps").assertExists()
+        compose.onNodeWithContentDescription("2 stars").assertExists()
+        compose.onNodeWithText("0:42 · 6 taps").assertExists()
+        compose.onNodeWithText("Best: ★★★").assertExists()
+        compose.onNodeWithText("3 stars: no mistakes, under 0:27").assertExists() // 15 s + 3 s × 4 arrows
         compose.onNodeWithText("Next level").performClick()
         compose.onNodeWithText("Share").performClick()
         assertEquals(1, next)
-        assertTrue(shared.single().startsWith("I solved Unarrow level 5 ❤️❤️🤍 6 taps"))
+        assertTrue(shared.single().startsWith("I solved Unarrow level 5 ★★☆ 0:42"))
         assertTrue(shared.single().endsWith("https://play.google.com/store/apps/details?id=ca.kallistesoft.unarrow"))
+    }
+
+    @Test
+    fun `the best result shows only when this one didn't beat it`() {
+        show(GameUiState(session(status = GameStatus.WON, stars = 3), bestStars = 3))
+        compose.onNodeWithTag("stars").assertExists()
+        compose.onNodeWithTag("best").assertDoesNotExist()
     }
 
     @Test
@@ -127,14 +140,16 @@ class GameScreenTest {
         var home = 0
         val shared = mutableListOf<String>()
         show(
-            GameUiState(session(mode = GameMode.DAILY, status = GameStatus.WON)),
+            GameUiState(session(mode = GameMode.DAILY, status = GameStatus.WON, stars = 3), bestDaily = DailyResult(3, 30)),
             GameActions(onHome = { home++ }, onShare = { text, _ -> shared += text }),
         )
         compose.onNodeWithText("Daily #12").assertExists()
+        compose.onNodeWithText("Best: ★★★ 0:30").assertExists()
+        compose.onNodeWithText("3 stars: no mistakes, under 0:27").assertDoesNotExist()
         compose.onNodeWithText("Home").performClick()
         compose.onNodeWithText("Share").performClick()
         assertEquals(1, home)
-        assertTrue(shared.single().startsWith("Unarrow Daily #12 ✅ ❤️❤️❤️ 6 taps"))
+        assertTrue(shared.single().startsWith("Unarrow Daily #12 ★★★ 0:42"))
     }
 
     @Test

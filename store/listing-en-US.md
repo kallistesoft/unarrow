@@ -15,6 +15,7 @@ order, clear the board, and watch the next puzzle get a little trickier.
 • A new Daily Puzzle every day, the same for everyone: keep your streak going
 • Share your result with friends in one tap
 • Three lives per puzzle: think before you tap
+• Beat the clock with no mistakes for three stars
 • Hints when you're stuck
 • Dark and light themes, English and French
 • No account, no sign-up: your progress stays on your phone

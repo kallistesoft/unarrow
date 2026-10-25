@@ -15,6 +15,7 @@ Trouvez le bon ordre, videz le plateau, et le prochain casse-tête sera un peu p
 • Un nouveau Défi du jour, le même pour tout le monde : gardez votre série
 • Partagez votre résultat avec vos amis d’une simple touche
 • Trois vies par casse-tête : réfléchissez avant de toucher
+• Battez le chrono sans erreur pour obtenir trois étoiles
 • Des indices quand vous êtes bloqué
 • Thèmes sombre et clair, en français et en anglais
 • Aucun compte, aucune inscription : votre progression reste sur votre téléphone

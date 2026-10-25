@@ -1,15 +1,18 @@
 package ca.kallistesoft.unarrow.feature.game
 
 import ca.kallistesoft.unarrow.core.billing.Product
+import ca.kallistesoft.unarrow.core.data.DailyResult
 import ca.kallistesoft.unarrow.core.data.GameProgress
 import ca.kallistesoft.unarrow.core.game.Board
 import ca.kallistesoft.unarrow.core.game.Levels
+import ca.kallistesoft.unarrow.core.game.Stars
 import ca.kallistesoft.unarrow.core.testing.FakeAds
 import ca.kallistesoft.unarrow.core.testing.FakeEngagement
 import ca.kallistesoft.unarrow.core.testing.FakeProgressRepository
 import ca.kallistesoft.unarrow.core.testing.FakePurchases
 import ca.kallistesoft.unarrow.core.testing.MainDispatcherRule
 import ca.kallistesoft.unarrow.core.testing.collecting
+import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.test.TestScope
 import kotlinx.coroutines.test.runTest
 import org.junit.Assert.assertEquals
@@ -191,5 +194,77 @@ class GameViewModelTest {
         assertTrue(vm.uiState.value.banner)
         ads.bannerAllowed.value = false
         assertEquals(false, vm.uiState.value.banner)
+    }
+
+    @Test
+    fun `a clean, quick solve earns three stars and the level keeps its best`() = runTest {
+        val vm = viewModel()
+        vm.solve()
+        assertEquals(3, vm.session.stars)
+        assertEquals(3, progress.state.value.levelStars[7])
+        vm.restart()
+        vm.tap(vm.session.board.blockedArrow().id)
+        vm.tap(vm.session.board.blockedArrow().id)
+        vm.solve()
+        assertEquals("two mistakes", 1, vm.session.stars)
+        assertEquals(2, vm.session.mistakes)
+        assertEquals("the best stays", 3, progress.state.value.levelStars[7])
+        assertEquals(3, vm.uiState.value.bestStars)
+        assertNull(vm.uiState.value.bestDaily)
+    }
+
+    @Test
+    fun `a hint caps the puzzle at two stars`() = runTest {
+        val vm = viewModel()
+        vm.hint()
+        vm.solve()
+        assertTrue(vm.session.hintUsed)
+        assertEquals(2, vm.session.stars)
+    }
+
+    @Test
+    fun `the clock runs while the screen is on and the puzzle played, not during an ad`() = runTest(main.testDispatcher) {
+        val vm = viewModel()
+        val time = main.testDispatcher.scheduler
+        vm.startClock()
+        vm.startClock() // already running
+        time.advanceTimeBy(3_500)
+        assertEquals(3, vm.session.seconds)
+
+        vm.stopClock()
+        time.advanceTimeBy(10_000)
+        assertEquals("paused in the background", 3, vm.session.seconds)
+
+        vm.startClock()
+        progress.state.value = progress.state.value.copy(hints = 0)
+        ads.rewardedOnScreen = CompletableDeferred()
+        vm.hint()
+        time.advanceTimeBy(5_000)
+        assertEquals("stopped under the ad", 3, vm.session.seconds)
+        ads.rewardedOnScreen!!.complete(Unit)
+        time.advanceTimeBy(2_000)
+        assertEquals(5, vm.session.seconds)
+
+        vm.solve()
+        time.advanceTimeBy(5_000)
+        assertEquals("stopped once solved", 5, vm.session.seconds)
+        assertEquals("too slow for 3 stars? no: a hint", 2, vm.session.stars)
+        vm.stopClock()
+    }
+
+    @Test
+    fun `a slow solve earns two stars, and the daily keeps its best time`() = runTest(main.testDispatcher) {
+        val vm = viewModel(GameMode.DAILY)
+        vm.startClock()
+        main.testDispatcher.scheduler.advanceTimeBy((Stars.targetSeconds(vm.session.startArrowCount) + 1) * 1_000L + 500)
+        vm.solve()
+        vm.stopClock()
+        val result = DailyResult(2, Stars.targetSeconds(vm.session.startArrowCount) + 1)
+        assertEquals(result, progress.state.value.bestDaily)
+        assertEquals(result, vm.uiState.value.bestDaily)
+        assertNull(vm.uiState.value.bestStars)
+
+        vm.restart()
+        assertEquals("a restart starts the clock and mistakes again", 0 to 0, vm.session.seconds to vm.session.mistakes)
     }
 }

@@ -1,7 +1,10 @@
 package ca.kallistesoft.unarrow.core.testing
 
+import ca.kallistesoft.unarrow.core.data.DailyResult
 import ca.kallistesoft.unarrow.core.data.GameProgress
 import ca.kallistesoft.unarrow.core.data.ProgressRepository
+import ca.kallistesoft.unarrow.core.data.withDailySolved
+import ca.kallistesoft.unarrow.core.data.withLevelSolved
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 
@@ -10,20 +13,12 @@ class FakeProgressRepository(initial: GameProgress = GameProgress(), var today: 
     val state = MutableStateFlow(initial)
     override val progress: StateFlow<GameProgress> = state
 
-    override suspend fun completeLevel(level: Int) {
-        state.value = state.value.let { it.copy(level = maxOf(it.level, level + 1), wins = it.wins + 1) }
+    override suspend fun completeLevel(level: Int, stars: Int) {
+        state.value = state.value.withLevelSolved(level, stars)
     }
 
-    override suspend fun completeDaily() {
-        val p = state.value
-        if (p.lastDailyDay == today) return
-        val streak = if (p.lastDailyDay == today - 1) p.dailyStreak + 1 else 1
-        state.value = p.copy(
-            dailyStreak = streak,
-            bestDailyStreak = maxOf(p.bestDailyStreak, streak),
-            lastDailyDay = today,
-            wins = p.wins + 1,
-        )
+    override suspend fun completeDaily(result: DailyResult) {
+        state.value = state.value.withDailySolved(today, result)
     }
 
     override suspend fun useHint(): Boolean {

@@ -27,6 +27,8 @@ data class GameColors(
     val life: Color,
     /** The daily streak flame. */
     val streak: Color,
+    /** Stars earned on a solved puzzle. */
+    val star: Color,
 )
 
 private val LightGame = GameColors(
@@ -36,6 +38,7 @@ private val LightGame = GameColors(
     blocked = Color(0xFFE5484D),
     life = Color(0xFFE5484D),
     streak = Color(0xFFF2711C),
+    star = Color(0xFFE8A200),
 )
 private val DarkGame = GameColors(
     arrow = Color(0xFFECEDF2),
@@ -44,6 +47,7 @@ private val DarkGame = GameColors(
     blocked = Color(0xFFFF6B6B),
     life = Color(0xFFFF6B6B),
     streak = Color(0xFFFF8A3D),
+    star = Color(0xFFFFC233),
 )
 
 private val LightColors = lightColorScheme(

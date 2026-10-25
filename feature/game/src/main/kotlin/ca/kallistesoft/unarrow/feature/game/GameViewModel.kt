@@ -7,16 +7,20 @@ import ca.kallistesoft.unarrow.core.ads.InterstitialAds
 import ca.kallistesoft.unarrow.core.ads.RewardedAds
 import ca.kallistesoft.unarrow.core.billing.Product
 import ca.kallistesoft.unarrow.core.billing.Purchases
+import ca.kallistesoft.unarrow.core.data.DailyResult
 import ca.kallistesoft.unarrow.core.data.ProgressRepository
 import ca.kallistesoft.unarrow.core.data.Today
 import ca.kallistesoft.unarrow.core.engagement.ReviewPrompt
 import ca.kallistesoft.unarrow.core.engagement.Sharer
 import ca.kallistesoft.unarrow.core.game.Levels
+import ca.kallistesoft.unarrow.core.game.Stars
 import ca.kallistesoft.unarrow.core.game.TapResult
 import dagger.assisted.Assisted
 import dagger.assisted.AssistedFactory
 import dagger.assisted.AssistedInject
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
@@ -29,8 +33,9 @@ import kotlinx.coroutines.launch
 
 /**
  * One game screen: a puzzle, its lives and hints, then the next one. Tapping a blocked arrow costs a life; with none
- * left the puzzle is lost (a rewarded ad buys one more). A solved puzzle is saved at once; the interstitial (if one is
- * due) comes when the player moves on, never during a puzzle. The banner ([bannerAds]) sits under the board while
+ * left the puzzle is lost (a rewarded ad buys one more). A clock runs while the puzzle is played on screen, and a
+ * solved puzzle gets its stars ([Stars]) and is saved at once; the interstitial (if one is due) comes when the player
+ * moves on, never during a puzzle. The banner ([bannerAds]) sits under the board while
  * ads are allowed.
  */
 @HiltViewModel(assistedFactory = GameViewModel.Factory::class)
@@ -52,6 +57,10 @@ class GameViewModel @AssistedInject constructor(
 
     private val session = MutableStateFlow<GameSession?>(null)
     private var blockedSerial = 0
+    private var clock: Job? = null
+
+    /** A rewarded ad is on screen: the clock stops (the screen may not pause under it). */
+    private var adOnScreen = false
 
     /** The puzzle is set up when the screen starts collecting, not when the ViewModel is created. */
     val uiState: StateFlow<GameUiState> = combine(
@@ -61,6 +70,7 @@ class GameViewModel @AssistedInject constructor(
         purchases.prices,
         bannerAds.bannerAllowed,
     ) { session, progress, rewardedReady, prices, banner ->
+        val levels = session?.mode == GameMode.LEVELS
         GameUiState(
             session = session,
             hints = progress.hints,
@@ -69,6 +79,8 @@ class GameViewModel @AssistedInject constructor(
             soundOn = progress.soundOn,
             hapticsOn = progress.hapticsOn,
             banner = banner,
+            bestStars = if (levels) progress.levelStars[session.level] else null,
+            bestDaily = if (session?.mode == GameMode.DAILY) progress.bestDaily else null,
         )
     }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), GameUiState())
 
@@ -94,22 +106,28 @@ class GameViewModel @AssistedInject constructor(
         if (current.status != GameStatus.PLAYING) return
         when (val result = current.board.tap(arrowId)) {
             is TapResult.Exited -> {
-                val solved = result.board.isCleared
-                session.value = current.copy(
+                val next = current.copy(
                     board = result.board,
                     taps = current.taps + 1,
                     hintId = current.hintId.takeIf { it != arrowId },
                     blocked = null,
                     exits = (current.exits + result.arrow).takeLast(EXITS_KEPT),
-                    status = if (solved) GameStatus.WON else GameStatus.PLAYING,
                 )
-                if (solved) win(current)
+                if (result.board.isCleared) {
+                    val stars = Stars.of(current.startArrowCount, current.mistakes, current.seconds, current.hintUsed)
+                    val won = next.copy(status = GameStatus.WON, stars = stars)
+                    session.value = won
+                    win(won)
+                } else {
+                    session.value = next
+                }
             }
             is TapResult.Blocked -> {
                 val lives = current.lives - 1
                 session.value = current.copy(
                     lives = lives,
                     taps = current.taps + 1,
+                    mistakes = current.mistakes + 1,
                     blocked = BlockedTap(arrowId, result.blocker.id, ++blockedSerial),
                     status = if (lives <= 0) GameStatus.LOST else GameStatus.PLAYING,
                 )
@@ -121,8 +139,8 @@ class GameViewModel @AssistedInject constructor(
     private fun win(played: GameSession) {
         viewModelScope.launch {
             when (played.mode) {
-                GameMode.LEVELS -> progress.completeLevel(played.level)
-                GameMode.DAILY -> progress.completeDaily()
+                GameMode.LEVELS -> progress.completeLevel(played.level, played.stars)
+                GameMode.DAILY -> progress.completeDaily(DailyResult(played.stars, played.seconds))
             }
             review.afterWin()
         }
@@ -133,9 +151,9 @@ class GameViewModel @AssistedInject constructor(
         val current = session.value ?: return
         if (current.status != GameStatus.PLAYING || current.hintId != null) return
         viewModelScope.launch {
-            val paid = progress.useHint() || rewarded.showRewarded()
+            val paid = progress.useHint() || watchRewarded()
             if (!paid) return@launch
-            session.update { s -> s?.copy(hintId = s.board.freeArrows().firstOrNull()?.id) }
+            session.update { s -> s?.copy(hintId = s.board.freeArrows().firstOrNull()?.id, hintUsed = true) }
         }
     }
 
@@ -143,7 +161,7 @@ class GameViewModel @AssistedInject constructor(
     fun extraLife() {
         if (session.value?.status != GameStatus.LOST) return
         viewModelScope.launch {
-            if (!rewarded.showRewarded()) return@launch
+            if (!watchRewarded()) return@launch
             session.update { it?.copy(lives = 1, blocked = null, status = GameStatus.PLAYING) }
         }
     }
@@ -155,9 +173,35 @@ class GameViewModel @AssistedInject constructor(
             GameMode.LEVELS -> levelSession(current.level)
             GameMode.DAILY -> {
                 val board = Levels.daily(today()).board()
-                current.copy(board = board, startArrowCount = board.arrows.size, lives = MAX_LIVES, taps = 0,
-                    hintId = null, blocked = null, exits = emptyList(), status = GameStatus.PLAYING)
+                GameSession(GameMode.DAILY, current.level, current.dailyNumber, board, board.arrows.size)
             }
+        }
+    }
+
+    /** The screen is on (resumed): the clock runs, a second at a time, while the puzzle is played. */
+    fun startClock() {
+        if (clock?.isActive == true) return
+        clock = viewModelScope.launch {
+            while (true) {
+                delay(1_000)
+                if (!adOnScreen) {
+                    session.update { s -> if (s?.status == GameStatus.PLAYING) s.copy(seconds = s.seconds + 1) else s }
+                }
+            }
+        }
+    }
+
+    /** The screen is paused (app in the background, another screen on top): the clock stops. */
+    fun stopClock() {
+        clock?.cancel()
+    }
+
+    private suspend fun watchRewarded(): Boolean {
+        adOnScreen = true
+        try {
+            return rewarded.showRewarded()
+        } finally {
+            adOnScreen = false
         }
     }
 

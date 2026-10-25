@@ -52,11 +52,19 @@
     <string name="game_retry">Try again</string>
     <string name="game_extra_life">Watch an ad: +1 life</string>
     <string name="game_get_hints">Get 10 hints</string>
+    <string name="game_time">%1$d:%2$02d</string>
+    <string name="game_time_label">Time %1$s</string>
+    <plurals name="game_stars">
+        <item quantity="one">%d star</item>
+        <item quantity="other">%d stars</item>
+    </plurals>
+    <string name="game_best">Best: %1$s</string>
+    <string name="game_target">3 stars: no mistakes, under %1$s</string>
     <string name="game_tutorial">Tap an arrow to slide it out. It only leaves if nothing is in its way.</string>
 
     <!-- Sharing -->
     <string name="share_level">I solved Unarrow level %1$d %2$s</string>
-    <string name="share_daily">Unarrow Daily #%1$d ✅ %2$s</string>
+    <string name="share_daily">Unarrow Daily #%1$d %2$s</string>
     <string name="share_play">Play it: %1$s</string>
     <string name="share_chooser">Share your result</string>
 

@@ -25,11 +25,17 @@ fun interface Today {
 interface ProgressRepository {
     val progress: Flow<GameProgress>
 
-    /** [level] was solved: the next one opens (replaying an older level opens nothing new). */
-    suspend fun completeLevel(level: Int)
+    /**
+     * [level] was solved for [stars]: the next one opens (replaying an older level opens nothing new) and the level
+     * keeps its best stars.
+     */
+    suspend fun completeLevel(level: Int, stars: Int)
 
-    /** Today's daily puzzle was solved: the streak grows if yesterday's was too, else starts again at 1. */
-    suspend fun completeDaily()
+    /**
+     * Today's daily puzzle was solved as [result]: the streak grows if yesterday's was too, else starts again at 1, and
+     * the best daily result is kept.
+     */
+    suspend fun completeDaily(result: DailyResult)
 
     /** Spends a hint; false when there are none left. */
     suspend fun useHint(): Boolean
@@ -52,22 +58,13 @@ internal class DataStoreProgressRepository @Inject constructor(
 ) : ProgressRepository {
     override val progress: Flow<GameProgress> = store.data
 
-    override suspend fun completeLevel(level: Int) {
-        store.updateData { it.copy(level = maxOf(it.level, level + 1), wins = it.wins + 1) }
+    override suspend fun completeLevel(level: Int, stars: Int) {
+        store.updateData { it.withLevelSolved(level, stars) }
     }
 
-    override suspend fun completeDaily() {
+    override suspend fun completeDaily(result: DailyResult) {
         val day = today()
-        store.updateData {
-            if (it.lastDailyDay == day) return@updateData it
-            val streak = if (it.lastDailyDay == day - 1) it.dailyStreak + 1 else 1
-            it.copy(
-                dailyStreak = streak,
-                bestDailyStreak = maxOf(it.bestDailyStreak, streak),
-                lastDailyDay = day,
-                wins = it.wins + 1,
-            )
-        }
+        store.updateData { it.withDailySolved(day, result) }
     }
 
     override suspend fun useHint(): Boolean {
