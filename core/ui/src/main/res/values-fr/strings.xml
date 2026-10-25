@@ -75,9 +75,9 @@
     <string name="game_arrow_rotating">%1$s, tournante</string>
     <string name="game_arrow_locked">%1$s, cadenas %2$s</string>
     <string name="game_arrow_key">%1$s, clé du cadenas %2$s</string>
-    <string name="lock_colour_0">orange</string>
+    <string name="lock_colour_0">ambre</string>
     <string name="lock_colour_1">bleu</string>
-    <string name="lock_colour_2">rose</string>
+    <string name="lock_colour_2">violet</string>
 
     <!-- Partage -->
     <string name="share_level">J’ai réussi le niveau %1$d d’Unarrow %2$s</string>

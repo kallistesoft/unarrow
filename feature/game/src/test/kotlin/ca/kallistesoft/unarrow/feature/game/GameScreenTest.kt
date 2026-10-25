@@ -242,7 +242,7 @@ class GameScreenTest {
         compose.onNodeWithContentDescription("Arrow pointing up, turning").assertExists()
         compose.onNodeWithContentDescription("Arrow pointing up, blue key").assertExists()
         compose.onNodeWithContentDescription("Arrow pointing right, blue lock").assertExists()
-        compose.onNodeWithContentDescription("Arrow pointing down, pink key").assertExists()
+        compose.onNodeWithContentDescription("Arrow pointing down, purple key").assertExists()
         compose.onRoot().captureToImage()
 
         // The key leaves (the lock fades), the spinner turns, then the unlocked arrow slides and shakes.
@@ -254,7 +254,7 @@ class GameScreenTest {
         val locks = Board(2, 2, listOf(spinner, locked.copy(lock = 0), Arrow(5, 1, 1, Direction.UP, key = 0)))
         state = state.copy(session = state.session!!.copy(board = locks, blocked = BlockedTap(locked.id, null, 2)))
         compose.mainClock.advanceTimeBy(1_000)
-        compose.onNodeWithContentDescription("Arrow pointing right, orange lock").assertExists()
+        compose.onNodeWithContentDescription("Arrow pointing right, amber lock").assertExists()
         compose.onRoot().captureToImage()
     }
 

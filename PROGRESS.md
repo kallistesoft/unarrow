@@ -40,6 +40,7 @@ and bundle (R8). The APKs and the `.aab` are in the run's `unarrow-<n>` artifact
 | 19f | Harder puzzles: few free arrows, long chains, faster curve (seed salts bumped), `DifficultyTest` | ✅ | 0778542 |
 | 19g | Timer and stars (best per level, best daily), stars and time in shares | ✅ | f433acb |
 | 19h | Sliding, rotating and locked arrows; solver (perfect line, traps, hints); curve and daily with the mechanics | ✅ | 6c923fc |
+| 19i | Nocturne redesign (studio palette, Manrope / JetBrains Mono, cards and chips), theme choice, Kallistesoft icon and splash, screenshot tests; English/French only | ✅ | 9c7b059, a9e4b42, 2e637d6, 1599e94 |
 | 20 | Release: store graphics, listing translations, products, internal testing, pull request `develop` → `main` | ⬜ waits on you | |
 
 ✅ done · ⏳ in progress · ⬜ to do · ❌ blocked
@@ -74,7 +75,8 @@ Done in the consoles:
 
 Still open:
 
-1. **Store graphics:** 512 × 512 icon, 1024 × 500 feature graphic, phone screenshots.
+1. **Store graphics:** 512 × 512 icon ✅ (`store/icon-512.png`, from `tools/make_icon.py`), 1024 × 500 feature
+   graphic and phone screenshots still to make, from the Nocturne redesign (light and dark).
 2. **Listing translations:** paste the fr-CA and fr-FR texts from `store/listing-fr-CA.md` and `store/listing-fr-FR.md`.
 3. **In-app products:** `remove_ads` (one-time, $3.99) and `hints_10` (consumable, $0.99); Play only allows them once
    a build with billing has been uploaded.
@@ -104,3 +106,9 @@ Still open:
 - 2026-10-25: a solved daily can no longer be reopened from its card (it could be replayed for free); "Play again
   (ad)" replays it after a rewarded ad. The streak never counts a day twice; a replay can only improve the best daily.
 - 2026-10-25: the banner strip runs to the bottom edge, behind the gesture bar; the ad itself stays above it.
+- 2026-10-25: redesign in the studio's "Nocturne" look (kallistesoft.ca): its palette in light and dark, Manrope with
+  extra-bold headings and JetBrains Mono labels (bundled, SIL OFL), site-style buttons, cards, chips and pills; a
+  Theme choice in Settings (system, light, dark); a new launcher icon and splash in the Kallistesoft game style
+  (board corner with K and S, the sun and the waves, on navy), drawn by `tools/make_icon.py`; screenshot references
+  for every screen in both themes. Settings now offers English or French only; French uses the Quebec wording on a
+  Canadian phone and France's elsewhere.
