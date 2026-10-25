@@ -15,6 +15,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.safeDrawing
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.widthIn
+import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.rounded.ArrowBack
 import androidx.compose.material.icons.rounded.Favorite
@@ -50,6 +51,7 @@ import ca.kallistesoft.unarrow.core.designsystem.TertiaryButton
 import ca.kallistesoft.unarrow.core.designsystem.UnarrowPreviews
 import ca.kallistesoft.unarrow.core.designsystem.PreviewSurface
 import ca.kallistesoft.unarrow.core.designsystem.UnarrowTheme
+import ca.kallistesoft.unarrow.core.designsystem.topBar
 import ca.kallistesoft.unarrow.core.engagement.PLAY_STORE_URL
 import ca.kallistesoft.unarrow.core.game.Levels
 import ca.kallistesoft.unarrow.core.ui.R
@@ -177,7 +179,10 @@ private fun BoxScope.PlayArea(state: GameUiState, session: GameSession, actions:
 @Composable
 private fun GameTopBar(session: GameSession?, onBack: () -> Unit) {
     Row(
-        Modifier.fillMaxWidth().padding(horizontal = Spacing.s, vertical = Spacing.xs),
+        Modifier
+            .fillMaxWidth()
+            .windowInsetsPadding(WindowInsets.topBar)
+            .padding(horizontal = Spacing.s, vertical = Spacing.xs),
         verticalAlignment = Alignment.CenterVertically,
     ) {
         IconButton(onClick = onBack) {

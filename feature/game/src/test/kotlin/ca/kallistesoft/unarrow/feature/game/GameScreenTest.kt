@@ -25,6 +25,7 @@ import ca.kallistesoft.unarrow.core.testing.FakeProgressRepository
 import ca.kallistesoft.unarrow.core.testing.FakePurchases
 import ca.kallistesoft.unarrow.core.testing.MainDispatcherRule
 import ca.kallistesoft.unarrow.core.testing.ScreenshotDevice
+import ca.kallistesoft.unarrow.core.testing.setContentWithSystemBars
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertTrue
 import org.junit.Rule
@@ -186,6 +187,26 @@ class GameScreenTest {
 
         state = state.copy(banner = false)
         compose.onNodeWithTag("banner").assertDoesNotExist()
+    }
+
+    @Test
+    fun `the top bar stays under the status bar, the banner right above the navigation bar`() {
+        val (statusBar, navigationBar) = with(compose.density) { 100.toDp() to 60.toDp() }
+        compose.setContentWithSystemBars(top = 100, bottom = 60) {
+            UnarrowTheme {
+                GameContent(
+                    GameUiState(session(status = GameStatus.WON), banner = true),
+                    GameActions(),
+                    banner = { FakeAds().Banner(it.height(Sizes.icon)) },
+                )
+            }
+        }
+        val root = compose.onRoot().getUnclippedBoundsInRoot()
+        assertTrue(compose.onNodeWithContentDescription("Back").getUnclippedBoundsInRoot().top >= statusBar)
+        assertTrue(compose.onNodeWithText("Level 5").getUnclippedBoundsInRoot().top >= statusBar)
+        val banner = compose.onNodeWithTag("banner").getUnclippedBoundsInRoot()
+        assertEquals("the inset applied once", root.bottom - navigationBar, banner.bottom)
+        assertTrue("win panel above the banner", compose.onNodeWithTag("result").getUnclippedBoundsInRoot().bottom <= banner.top)
     }
 
     @Test

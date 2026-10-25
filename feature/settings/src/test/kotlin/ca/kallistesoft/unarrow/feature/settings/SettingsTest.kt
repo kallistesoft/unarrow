@@ -7,6 +7,8 @@ import androidx.compose.ui.test.onNodeWithContentDescription
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
 import androidx.compose.ui.test.performScrollTo
+import androidx.compose.ui.test.getUnclippedBoundsInRoot
+import androidx.compose.ui.test.onRoot
 import androidx.core.os.LocaleListCompat
 import ca.kallistesoft.unarrow.core.ads.AdConsent
 import ca.kallistesoft.unarrow.core.data.GameProgress
@@ -16,6 +18,7 @@ import ca.kallistesoft.unarrow.core.testing.FakePurchases
 import ca.kallistesoft.unarrow.core.testing.MainDispatcherRule
 import ca.kallistesoft.unarrow.core.testing.ScreenshotDevice
 import ca.kallistesoft.unarrow.core.testing.collecting
+import ca.kallistesoft.unarrow.core.testing.setContentWithSystemBars
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.test.runTest
 import org.junit.After
@@ -107,6 +110,21 @@ class SettingsTest {
             listOf("sound false", "haptics false", "FRENCH_CANADA", "restore", "privacy", "rate", "back"),
             calls,
         )
+    }
+
+    @Test
+    fun `the top bar stays under the status bar, the last row above the navigation bar`() {
+        val (statusBar, navigationBar) = with(compose.density) { 100.toDp() to 60.toDp() }
+        compose.setContentWithSystemBars(top = 100, bottom = 60) {
+            UnarrowTheme {
+                SettingsContent(SettingsUiState(loading = false), SettingsActions(), AppLanguage.SYSTEM, "1.0")
+            }
+        }
+        assertTrue(compose.onNodeWithContentDescription("Back").getUnclippedBoundsInRoot().top >= statusBar)
+        assertTrue(compose.onNodeWithText("Settings").getUnclippedBoundsInRoot().top >= statusBar)
+        val root = compose.onRoot().getUnclippedBoundsInRoot()
+        val version = compose.onNodeWithText("Version 1.0").performScrollTo().getUnclippedBoundsInRoot()
+        assertTrue(version.bottom <= root.bottom - navigationBar)
     }
 
     @Test

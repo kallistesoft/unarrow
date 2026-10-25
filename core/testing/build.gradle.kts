@@ -23,4 +23,5 @@ dependencies {
     api(libs.roborazzi)
     api(libs.roborazzi.compose)
     api(libs.turbine)
+    implementation(libs.androidx.core.ktx)
 }

@@ -13,6 +13,7 @@ import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.safeDrawing
 import androidx.compose.foundation.layout.widthIn
+import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.selection.selectable
 import androidx.compose.foundation.selection.toggleable
@@ -44,6 +45,7 @@ import ca.kallistesoft.unarrow.core.designsystem.PreviewSurface
 import ca.kallistesoft.unarrow.core.designsystem.Sizes
 import ca.kallistesoft.unarrow.core.designsystem.Spacing
 import ca.kallistesoft.unarrow.core.designsystem.UnarrowPreviews
+import ca.kallistesoft.unarrow.core.designsystem.topBar
 import ca.kallistesoft.unarrow.core.engagement.PLAY_STORE_URL
 import ca.kallistesoft.unarrow.core.ui.R
 
@@ -93,7 +95,10 @@ internal fun SettingsContent(
         modifier.testTag("settings"),
         contentWindowInsets = WindowInsets.safeDrawing,
         topBar = {
-            Row(Modifier.padding(Spacing.s), verticalAlignment = Alignment.CenterVertically) {
+            Row(
+                Modifier.fillMaxWidth().windowInsetsPadding(WindowInsets.topBar).padding(Spacing.s),
+                verticalAlignment = Alignment.CenterVertically,
+            ) {
                 IconButton(onClick = actions.onBack) {
                     Icon(Icons.AutoMirrored.Rounded.ArrowBack, contentDescription = stringResource(R.string.back))
                 }
