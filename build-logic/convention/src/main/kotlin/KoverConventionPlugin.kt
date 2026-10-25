@@ -37,8 +37,14 @@ class KoverConventionPlugin : Plugin<Project> {
                             "*_Provide*Factory*",
                             "dagger.hilt.internal.aggregatedroot.codegen.*",
                             "hilt_aggregated_deps.*",
-                            // Hilt modules: wiring only, checked by the app starting.
-                            "*.di.*Module*",
+                            // Hilt wiring and navigation keys: checked by the app starting.
+                            "*.di.*",
+                            "*.navigation.*",
+                            // The app's entry points (activity, application, navigation host): tested by running the
+                            // app on the emulator (.claude/skills/testing-on-emulator), not by unit tests.
+                            "ca.kallistesoft.unarrow.MainActivity",
+                            "ca.kallistesoft.unarrow.UnarrowApplication",
+                            "ca.kallistesoft.unarrow.UnarrowAppKt",
                         )
                         // Previews only feed Android Studio and the screenshot tests.
                         annotatedBy("androidx.compose.ui.tooling.preview.Preview", "*Generated*")

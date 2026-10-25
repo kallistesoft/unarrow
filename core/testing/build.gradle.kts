@@ -12,6 +12,7 @@ dependencies {
     api(project(":core:ads"))
     api(project(":core:billing"))
     api(project(":core:data"))
+    api(project(":core:engagement"))
     api(project(":core:flags"))
     // The BOM travels with the Compose test library, for modules without Compose of their own.
     api(platform(libs.androidx.compose.bom))

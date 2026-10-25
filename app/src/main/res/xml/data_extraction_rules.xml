@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Android 12+: progress follows the player to a new device; the cached update rules don't. -->
+<data-extraction-rules>
+    <cloud-backup>
+        <exclude domain="file" path="datastore/force_update.preferences_pb" />
+    </cloud-backup>
+    <device-transfer>
+        <exclude domain="file" path="datastore/force_update.preferences_pb" />
+    </device-transfer>
+</data-extraction-rules>

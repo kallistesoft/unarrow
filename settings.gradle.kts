@@ -30,9 +30,11 @@ dependencyResolutionManagement {
 rootProject.name = "Unarrow"
 enableFeaturePreview("TYPESAFE_PROJECT_ACCESSORS")
 
+include(":app")
 include(":core:ads")
 include(":core:billing")
 include(":core:common")
+include(":core:engagement")
 include(":core:flags")
 include(":core:game")
 include(":core:update")
@@ -40,3 +42,6 @@ include(":core:data")
 include(":core:designsystem")
 include(":core:testing")
 include(":core:ui")
+include(":feature:game")
+include(":feature:home")
+include(":feature:settings")
