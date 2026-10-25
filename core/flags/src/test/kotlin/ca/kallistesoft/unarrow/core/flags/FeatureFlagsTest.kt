@@ -26,6 +26,15 @@ class FeatureFlagsTest {
     }
 
     @Test
+    fun `without Firebase every number has its default, and tests can change one`() = runTest {
+        assertEquals(RemoteNumber.entries.associateWith { it.defaultValue }, DefaultRemoteNumbers().numbers.first())
+        assertEquals(5L, DefaultRemoteNumbers().value(RemoteNumber.INTERSTITIAL_FIRST_LEVEL).first())
+        val numbers = DefaultRemoteNumbers(mapOf(RemoteNumber.INTERSTITIAL_EVERY to 4L))
+        assertEquals(4L, numbers.value(RemoteNumber.INTERSTITIAL_EVERY).first())
+        assertEquals(180L, numbers.value(RemoteNumber.INTERSTITIAL_CAP_SECONDS).first())
+    }
+
+    @Test
     fun `without Firebase nothing is known remotely`() = runTest {
         assertNull(NoRemoteConfigValues.fetchLong("min_version_code"))
     }

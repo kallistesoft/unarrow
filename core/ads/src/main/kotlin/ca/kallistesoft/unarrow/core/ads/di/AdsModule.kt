@@ -13,6 +13,7 @@ import ca.kallistesoft.unarrow.core.ads.UmpConsent
 import ca.kallistesoft.unarrow.core.common.CurrentActivity
 import ca.kallistesoft.unarrow.core.data.ProgressRepository
 import ca.kallistesoft.unarrow.core.flags.FeatureFlags
+import ca.kallistesoft.unarrow.core.flags.RemoteNumbers
 import com.google.android.ump.UserMessagingPlatform
 import dagger.Module
 import dagger.Provides
@@ -39,6 +40,7 @@ internal object AdsModule {
     fun adsManager(
         @ApplicationContext context: Context,
         flags: FeatureFlags,
+        numbers: RemoteNumbers,
         config: AdsConfig,
         currentActivity: CurrentActivity,
         progress: ProgressRepository,
@@ -46,6 +48,7 @@ internal object AdsModule {
         consent = UmpConsent(UserMessagingPlatform.getConsentInformation(context)),
         sdk = GoogleAdsSdk(context),
         flags = flags,
+        numbers = numbers,
         currentActivity = currentActivity::get,
         config = config,
         scope = CoroutineScope(SupervisorJob() + Dispatchers.Main.immediate),

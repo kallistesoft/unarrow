@@ -4,6 +4,7 @@ import android.content.Context
 import ca.kallistesoft.unarrow.core.ads.AdsConfig
 import ca.kallistesoft.unarrow.core.testing.FakeFeatureFlags
 import ca.kallistesoft.unarrow.core.testing.FakeProgressRepository
+import ca.kallistesoft.unarrow.core.testing.FakeRemoteNumbers
 import ca.kallistesoft.unarrow.core.testing.ScreenshotDevice
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertSame
@@ -20,7 +21,7 @@ class AdsModuleTest {
 
     @Test
     fun `one manager serves every ad and the consent, and nothing is asked before launch`() {
-        val manager = AdsModule.adsManager(context, FakeFeatureFlags(), AdsConfig("unit-1"), { null }, FakeProgressRepository())
+        val manager = AdsModule.adsManager(context, FakeFeatureFlags(), FakeRemoteNumbers(), AdsConfig("unit-1"), { null }, FakeProgressRepository())
         assertSame(manager, AdsModule.interstitialAds(manager))
         assertSame(manager, AdsModule.rewardedAds(manager))
         assertSame(manager, AdsModule.bannerAds(manager))

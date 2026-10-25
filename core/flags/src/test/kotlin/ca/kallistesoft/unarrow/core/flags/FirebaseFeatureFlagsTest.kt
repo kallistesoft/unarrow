@@ -99,6 +99,47 @@ class FirebaseFeatureFlagsTest {
         assertEquals(false, flags.values.value[FeatureFlag.REWARDED_ADS])
     }
 
+    @Test
+    fun `numbers keep their defaults until the server sets them, then follow it`() = runTest {
+        val flags = flags()
+        assertEquals(RemoteNumber.entries.associateWith { it.defaultValue }, flags.numbers.value)
+
+        remote["interstitial_first_level"] = 8L
+        remote["interstitial_every"] = 2L
+        remote["interstitial_cap_seconds"] = 0L
+        flags.refresh()
+        assertEquals(
+            mapOf(
+                RemoteNumber.INTERSTITIAL_FIRST_LEVEL to 8L,
+                RemoteNumber.INTERSTITIAL_EVERY to 2L,
+                RemoteNumber.INTERSTITIAL_CAP_SECONDS to 0L,
+            ),
+            flags.numbers.value,
+        )
+    }
+
+    @Test
+    fun `a number below its minimum, or not a number, gets the default`() = runTest {
+        remote["interstitial_first_level"] = 0L
+        remote["interstitial_every"] = -1L
+        remote["interstitial_cap_seconds"] = "soon"
+        assertEquals(RemoteNumber.entries.associateWith { it.defaultValue }, flags().numbers.value)
+    }
+
+    @Test
+    fun `real-time updates and number fetches refresh the numbers too`() = runTest {
+        val flags = flags()
+        runCurrent()
+        remote["interstitial_every"] = 4L
+        listener.captured.onUpdate(mockk())
+        runCurrent()
+        assertEquals(4L, flags.numbers.value[RemoteNumber.INTERSTITIAL_EVERY])
+
+        remote["interstitial_every"] = 6L
+        flags.fetchLong("min_version_code")
+        assertEquals(6L, flags.numbers.value[RemoteNumber.INTERSTITIAL_EVERY])
+    }
+
     private fun TestScope.flags() = FirebaseFeatureFlags(config, FeatureFlagSettings(60), backgroundScope)
 
     /** A value from the server, or the static default (false, 0) when it has none. */
@@ -106,6 +147,9 @@ class FirebaseFeatureFlagsTest {
         every { source } returns
             if (remote == null) FirebaseRemoteConfig.VALUE_SOURCE_STATIC else FirebaseRemoteConfig.VALUE_SOURCE_REMOTE
         every { asBoolean() } returns (remote as? Boolean ?: false)
-        every { asLong() } returns (remote as? Long ?: 0L)
+        every { asLong() } answers {
+            // Like Firebase: a value that isn't a number can't be read as one.
+            if (remote is String) throw IllegalArgumentException("not a number") else remote as? Long ?: 0L
+        }
     }
 }

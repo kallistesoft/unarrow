@@ -2,11 +2,13 @@ package ca.kallistesoft.unarrow.core.flags.di
 
 import android.content.Context
 import ca.kallistesoft.unarrow.core.flags.DefaultFeatureFlags
+import ca.kallistesoft.unarrow.core.flags.DefaultRemoteNumbers
 import ca.kallistesoft.unarrow.core.flags.FeatureFlagSettings
 import ca.kallistesoft.unarrow.core.flags.FeatureFlags
 import ca.kallistesoft.unarrow.core.flags.FirebaseFeatureFlags
 import ca.kallistesoft.unarrow.core.flags.NoRemoteConfigValues
 import ca.kallistesoft.unarrow.core.flags.RemoteConfigValues
+import ca.kallistesoft.unarrow.core.flags.RemoteNumbers
 import com.google.firebase.FirebaseApp
 import dagger.Module
 import dagger.Provides
@@ -39,6 +41,11 @@ internal object FlagsModule {
     @Provides
     @Singleton
     fun featureFlags(holder: RemoteConfigHolder): FeatureFlags = holder.firebase ?: DefaultFeatureFlags()
+
+    /** Remote numbers with Firebase, defaults otherwise. */
+    @Provides
+    @Singleton
+    fun remoteNumbers(holder: RemoteConfigHolder): RemoteNumbers = holder.firebase ?: DefaultRemoteNumbers()
 
     /** Remote values with Firebase; without it nothing is known remotely. */
     @Provides

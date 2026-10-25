@@ -2,7 +2,9 @@ package ca.kallistesoft.unarrow.core.ads
 
 import android.app.Activity
 import ca.kallistesoft.unarrow.core.flags.FeatureFlag
+import ca.kallistesoft.unarrow.core.flags.RemoteNumber
 import ca.kallistesoft.unarrow.core.testing.FakeFeatureFlags
+import ca.kallistesoft.unarrow.core.testing.FakeRemoteNumbers
 import io.mockk.mockk
 import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.ExperimentalCoroutinesApi
@@ -17,11 +19,12 @@ import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
 import org.junit.Test
 
-/** The ad rules on fake SDKs: consent gating, the `ads_enabled` flag, preloading, the 3-minute cap and fallbacks. */
+/** The ad rules on fake SDKs: consent gating, the `ads_enabled` flag, preloading, the pacing and cap, fallbacks. */
 @OptIn(ExperimentalCoroutinesApi::class)
 class AdsManagerTest {
     private val activity = mockk<Activity>()
     private val flags = FakeFeatureFlags()
+    private val numbers = FakeRemoteNumbers()
     private val consent = FakeConsent()
     private val sdk = FakeSdk()
     private var now = 0L
@@ -30,7 +33,7 @@ class AdsManagerTest {
     private val adsRemoved = MutableStateFlow(false)
 
     private fun TestScope.manager(config: AdsConfig = AdsConfig("unit-1")) = AdsManager(
-        consent, sdk, flags, { onScreen }, config, backgroundScope, { now }, adsRemoved,
+        consent, sdk, flags, numbers, { onScreen }, config, backgroundScope, { now }, adsRemoved,
     )
 
     private fun TestScope.withRewarded(): AdsManager = manager(AdsConfig("unit-1", rewardedUnitId = "reward-1")).also {
@@ -256,11 +259,35 @@ class AdsManagerTest {
         ads.showAfterPuzzle(7)
         assertEquals(1, sdk.shown)
         runCurrent()
-        now += CAP_MILLIS
+        now += 3 * 60_000
         repeat(2) { ads.showAfterPuzzle(8) }
         assertEquals(1, sdk.shown)
         ads.showAfterPuzzle(8)
         assertEquals(2, sdk.shown)
+    }
+
+    @Test
+    fun `the pacing follows Remote Config`() = runTest {
+        numbers.set(RemoteNumber.INTERSTITIAL_FIRST_LEVEL, 2)
+        numbers.set(RemoteNumber.INTERSTITIAL_EVERY, 1)
+        numbers.set(RemoteNumber.INTERSTITIAL_CAP_SECONDS, 30)
+        val ads = started()
+        ads.showAfterPuzzle(1)
+        assertEquals("not before level 2", 0, sdk.shown)
+        ads.showAfterPuzzle(2)
+        assertEquals("every puzzle", 1, sdk.shown)
+        runCurrent()
+        now += 29_000
+        ads.showAfterPuzzle(3)
+        assertEquals("capped for 30 s", 1, sdk.shown)
+        now += 1_000
+        ads.showAfterPuzzle(3)
+        assertEquals(2, sdk.shown)
+
+        numbers.set(RemoteNumber.INTERSTITIAL_CAP_SECONDS, 0)
+        runCurrent()
+        ads.showAfterPuzzle(3)
+        assertEquals("no cap", 3, sdk.shown)
     }
 
     @Test

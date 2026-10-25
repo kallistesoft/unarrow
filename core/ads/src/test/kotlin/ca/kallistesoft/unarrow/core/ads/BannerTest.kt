@@ -12,6 +12,7 @@ import androidx.compose.ui.test.getUnclippedBoundsInRoot
 import androidx.compose.ui.test.junit4.createAndroidComposeRule
 import androidx.compose.ui.test.onNodeWithTag
 import ca.kallistesoft.unarrow.core.testing.FakeFeatureFlags
+import ca.kallistesoft.unarrow.core.testing.FakeRemoteNumbers
 import ca.kallistesoft.unarrow.core.testing.ScreenshotDevice
 import com.google.android.gms.ads.AdView
 import io.mockk.mockk
@@ -36,7 +37,7 @@ class BannerTest {
     @Test
     fun `the banner takes room once loaded, and is removed when it leaves`() {
         val manager = AdsManager(
-            consent = mockk(), sdk = mockk(), flags = FakeFeatureFlags(), currentActivity = { null },
+            consent = mockk(), sdk = mockk(), flags = FakeFeatureFlags(), numbers = FakeRemoteNumbers(), currentActivity = { null },
             config = AdsConfig("unit-1", bannerUnitId = "banner-1"), scope = CoroutineScope(Dispatchers.Unconfined),
             clock = { 0L },
         )

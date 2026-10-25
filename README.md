@@ -22,10 +22,10 @@ day are identical on every device and in every version (`SeededRandom` is SplitM
 | `:feature:settings` | Sound, vibration, language, restore purchases, privacy options, rating |
 | `:core:game` | Pure Kotlin rules, generator, level curve, daily puzzle |
 | `:core:data` | Progress on DataStore (level, streak, hints, wins, settings) |
-| `:core:ads` | AdMob: UMP consent, interstitial every 3 puzzles from level 5, rewarded ads |
+| `:core:ads` | AdMob: UMP consent, interstitial every 3 puzzles from level 5 (Remote Config), rewarded ads, banner under the board |
 | `:core:billing` | Play Billing 9: `remove_ads` (one-time), `hints_10` (consumable) |
 | `:core:engagement` | Play In-App Review, share sheet |
-| `:core:flags` | Firebase Remote Config: `ads_enabled`, `rewarded_ads`, `review_prompt` |
+| `:core:flags` | Firebase Remote Config: `ads_enabled`, `rewarded_ads`, `review_prompt`; interstitial pacing numbers |
 | `:core:update` | Force update (`min_version_code`), Play immediate and flexible in-app updates |
 | `:core:ui` | Every string (values, values-fr, values-fr-rCA) |
 | `:core:designsystem` | Theme (dark and light), buttons, spacing |

@@ -2,6 +2,7 @@ package ca.kallistesoft.unarrow.core.flags.di
 
 import android.content.Context
 import ca.kallistesoft.unarrow.core.flags.DefaultFeatureFlags
+import ca.kallistesoft.unarrow.core.flags.DefaultRemoteNumbers
 import ca.kallistesoft.unarrow.core.flags.FeatureFlagSettings
 import ca.kallistesoft.unarrow.core.flags.NoRemoteConfigValues
 import ca.kallistesoft.unarrow.core.testing.ScreenshotDevice
@@ -32,6 +33,7 @@ class FlagsModuleTest {
         val holder = FlagsModule.remoteConfig(context, settings)
         assertNull(holder.firebase)
         assertTrue(FlagsModule.featureFlags(holder) is DefaultFeatureFlags)
+        assertTrue(FlagsModule.remoteNumbers(holder) is DefaultRemoteNumbers)
         assertSame(NoRemoteConfigValues, FlagsModule.remoteConfigValues(holder))
     }
 
@@ -49,6 +51,7 @@ class FlagsModuleTest {
         val firebase = holder.firebase
         assertNotNull(firebase)
         assertSame(firebase, FlagsModule.featureFlags(holder))
+        assertSame(firebase, FlagsModule.remoteNumbers(holder))
         assertSame(firebase, FlagsModule.remoteConfigValues(holder))
     }
 }

@@ -1,20 +1,22 @@
 package ca.kallistesoft.unarrow.core.ads
 
 import android.app.Activity
+import ca.kallistesoft.unarrow.core.flags.RemoteNumber
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.StateFlow
 
 /**
- * The interstitial between puzzles: after every [INTERSTITIAL_EVERY] solved puzzles from level [FIRST_AD_LEVEL], never
- * during a puzzle, and never once "Remove ads" is bought. Tests use a fake (`FakeAds` in `:core:testing`).
+ * The interstitial between puzzles: after every `interstitial_every` solved puzzles (3 by default) from level
+ * `interstitial_first_level` (5), never during a puzzle, and never once "Remove ads" is bought. Both numbers come from
+ * Remote Config ([RemoteNumber]). Tests use a fake (`FakeAds` in `:core:testing`).
  */
 fun interface InterstitialAds {
     /**
      * Called once a puzzle is solved, before the next one; returns once the ad (if any) is closed. [level] is the
      * player's level (the daily puzzle passes theirs too). Returns at once, showing nothing, when no ad is due or
-     * none can be shown (no consent, `ads_enabled` off, the 3-minute cap, none loaded).
+     * none can be shown (no consent, `ads_enabled` off, the `interstitial_cap_seconds` cap, none loaded).
      */
     suspend fun showAfterPuzzle(level: Int)
 }
@@ -66,9 +68,3 @@ data class AdsConfig(
     val bannerUnitId: String = "",
     val enabled: Boolean = true,
 )
-
-/** The first level after which interstitials may show: new players learn the game without ads. */
-const val FIRST_AD_LEVEL = 5
-
-/** One interstitial every this many solved puzzles. */
-const val INTERSTITIAL_EVERY = 3
