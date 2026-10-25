@@ -78,6 +78,19 @@ fun TertiaryButton(text: String, onClick: () -> Unit, modifier: Modifier = Modif
 @Composable
 private fun ButtonText(text: String) = Text(text, style = MaterialTheme.typography.labelLarge, textAlign = TextAlign.Center)
 
+/** A small ghost button, as on the site: radius 10, 44 tall, a 1 px border; sized to its text. */
+@Composable
+fun SmallButton(text: String, onClick: () -> Unit, modifier: Modifier = Modifier, enabled: Boolean = true) {
+    OutlinedButton(
+        onClick = onClick,
+        enabled = enabled,
+        shape = MaterialTheme.shapes.small,
+        border = BorderStroke(Sizes.border, MaterialTheme.colorScheme.outline),
+        colors = ButtonDefaults.outlinedButtonColors(contentColor = UnarrowTheme.brand.accentText),
+        modifier = modifier.heightIn(min = Sizes.smallButtonHeight),
+    ) { Text(text, style = MaterialTheme.typography.labelLarge) }
+}
+
 /**
  * A card as on the site: surface, 1 px border (or [borderOverride]), radius 18; clickable when [onClick] is set. Its
  * content keeps full colours when disabled.

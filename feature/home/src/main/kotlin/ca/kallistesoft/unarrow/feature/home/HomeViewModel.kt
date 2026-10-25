@@ -42,7 +42,7 @@ class HomeViewModel @Inject constructor(
     private val progress: ProgressRepository,
     private val purchases: Purchases,
     private val rewarded: RewardedAds,
-    today: Today,
+    private val today: Today,
 ) : ViewModel() {
     val uiState: StateFlow<HomeUiState> = combine(
         progress.progress,
@@ -70,8 +70,8 @@ class HomeViewModel @Inject constructor(
      * Today's daily again, once a rewarded ad was watched to the end. The streak doesn't move (one day counts once);
      * only a better result can replace the best daily.
      */
-    fun retryDaily(onRetry: () -> Unit) {
-        viewModelScope.launch { if (rewarded.showRewarded()) onRetry() }
+    fun retryDaily(onRetry: (day: Long) -> Unit) {
+        viewModelScope.launch { if (rewarded.showRewarded()) onRetry(today()) }
     }
 
     /** The home's sound button: the same setting as in Settings. */

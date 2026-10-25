@@ -61,6 +61,7 @@
     </plurals>
     <string name="game_next">Next level</string>
     <string name="game_home">Home</string>
+    <string name="game_back_history">Back to history</string>
     <string name="game_share">Share</string>
     <string name="game_lost">Out of lives</string>
     <string name="game_lost_body">A blocked arrow slides and costs a life. Look before you tap.</string>
@@ -91,6 +92,17 @@
     <string name="share_daily">Unarrow Daily #%1$d %2$s</string>
     <string name="share_play">Play it: %1$s</string>
     <string name="share_chooser">Share your result</string>
+
+    <!-- History -->
+    <string name="history">History</string>
+    <string name="history_levels">Levels</string>
+    <string name="history_daily">Daily</string>
+    <string name="history_replay">Replay (ad)</string>
+    <string name="history_no_ad">No ad available right now. Try again in a moment.</string>
+    <string name="history_empty_levels">No level solved yet.</string>
+    <string name="history_empty_daily">No daily puzzle solved yet.</string>
+    <string name="history_no_time">—</string>
+    <string name="history_no_time_label">time unknown</string>
 
     <!-- Settings -->
     <string name="settings_sound">Sound</string>

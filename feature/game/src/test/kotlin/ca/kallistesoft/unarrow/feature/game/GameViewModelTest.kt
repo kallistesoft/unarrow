@@ -3,6 +3,7 @@ package ca.kallistesoft.unarrow.feature.game
 import ca.kallistesoft.unarrow.core.billing.Product
 import ca.kallistesoft.unarrow.core.data.DailyResult
 import ca.kallistesoft.unarrow.core.data.GameProgress
+import ca.kallistesoft.unarrow.core.data.LevelResult
 import ca.kallistesoft.unarrow.core.game.Board
 import ca.kallistesoft.unarrow.core.game.Levels
 import ca.kallistesoft.unarrow.core.game.Stars
@@ -37,8 +38,12 @@ class GameViewModelTest {
     private val purchases = FakePurchases()
     private val engagement = FakeEngagement()
 
-    private fun TestScope.viewModel(mode: GameMode = GameMode.LEVELS, puzzles: Puzzles = Puzzles(Dispatchers.Unconfined)) =
-        GameViewModel(mode, progress, { today }, puzzles, ads, ads, purchases, engagement, engagement, ads).also {
+    private fun TestScope.viewModel(
+        mode: GameMode = GameMode.LEVELS,
+        puzzles: Puzzles = Puzzles(Dispatchers.Unconfined),
+        replay: Replay? = null,
+    ) =
+        GameViewModel(mode, replay, progress, { today }, puzzles, ads, ads, purchases, engagement, engagement, ads).also {
             collecting(it.uiState)
         }
 
@@ -215,14 +220,14 @@ class GameViewModelTest {
         val vm = viewModel()
         vm.solve()
         assertEquals(3, vm.session.stars)
-        assertEquals(3, progress.state.value.levelStars[7])
+        assertEquals(3, progress.state.value.levelResults[7]?.stars)
         vm.restart()
         vm.tap(vm.session.board.blockedArrow().id)
         vm.tap(vm.session.board.blockedArrow().id)
         vm.solve()
         assertEquals("two mistakes", 1, vm.session.stars)
         assertEquals(2, vm.session.mistakes)
-        assertEquals("the best stays", 3, progress.state.value.levelStars[7])
+        assertEquals("the best stays", 3, progress.state.value.levelResults[7]?.stars)
         assertEquals(3, vm.uiState.value.bestStars)
         assertNull(vm.uiState.value.bestDaily)
     }
@@ -329,5 +334,44 @@ class GameViewModelTest {
         assertEquals(Tip.ROTATING, second.session.tip)
         assertNull(viewModel(GameMode.DAILY).session.tip)
         assertNull("plain boards have no tip", viewModel().session.tip)
+    }
+
+    @Test
+    fun `a replayed level only improves its best, with no interstitial and no next level`() = runTest {
+        progress.state.value = progress.state.value.copy(levelResults = mapOf(3 to LevelResult(2, 500)))
+        val vm = viewModel(replay = Replay(3, fromHistory = true))
+        assertEquals(3, vm.session.level)
+        assertEquals(Levels.spec(3).board(), vm.session.board)
+        vm.solve()
+        assertEquals(GameStatus.WON, vm.session.status)
+        assertEquals("the current level doesn't move", 7, progress.state.value.level)
+        assertEquals(LevelResult(3, 0), progress.state.value.levelResults[3])
+        assertEquals(0, engagement.reviewAsks)
+        vm.next()
+        assertEquals("no next level from a replay", 3, vm.session.level)
+        vm.leaveAfterWin()
+        assertTrue("no interstitial after a replay", ads.interstitialLevels.isEmpty())
+
+        vm.restart()
+        assertEquals(Replay(3, fromHistory = true), vm.session.replay)
+        repeat(2) { vm.tap(vm.session.board.blockedArrow().id) }
+        vm.solve()
+        assertEquals("a worse replay keeps the best", LevelResult(3, 0), progress.state.value.levelResults[3])
+    }
+
+    @Test
+    fun `a replayed past daily only improves that day, never the streak or the last solved day`() = runTest {
+        progress.state.value = GameProgress(level = 7, dailyStreak = 2, bestDailyStreak = 4, lastDailyDay = today - 1)
+        val day = today - 5
+        val vm = viewModel(GameMode.DAILY, replay = Replay(day, fromHistory = true))
+        assertEquals(Levels.daily(day).board(), vm.session.board)
+        assertEquals(Levels.dailyNumber(day), vm.session.dailyNumber)
+        vm.solve()
+        val p = progress.state.value
+        assertEquals(DailyResult(3, 0), p.dailyResults[day])
+        assertEquals(today - 1, p.lastDailyDay)
+        assertEquals(2 to 4, p.dailyStreak to p.bestDailyStreak)
+        vm.leaveAfterWin()
+        assertTrue(ads.interstitialLevels.isEmpty())
     }
 }

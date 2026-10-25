@@ -9,9 +9,16 @@ import kotlinx.serialization.Serializable
 @Serializable
 data object Home : NavKey
 
-/** A game: the player's levels, or today's daily puzzle. */
+/**
+ * A game: the player's levels, or today's daily puzzle; or one puzzle played again after a rewarded ad ([replay]: the
+ * level, or the daily's epoch day), from the history or from home.
+ */
 @Serializable
-data class Game(val mode: GameMode) : NavKey
+data class Game(val mode: GameMode, val replay: Long? = null, val fromHistory: Boolean = false) : NavKey
+
+/** Every solved level and daily, with their best results. */
+@Serializable
+data object History : NavKey
 
 @Serializable
 data object Settings : NavKey

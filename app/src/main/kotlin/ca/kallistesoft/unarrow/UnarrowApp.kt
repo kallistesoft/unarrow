@@ -22,13 +22,16 @@ import androidx.navigation3.ui.NavDisplay
 import ca.kallistesoft.unarrow.core.update.FlexibleUpdate
 import ca.kallistesoft.unarrow.feature.game.GameMode
 import ca.kallistesoft.unarrow.feature.game.GameScreen
+import ca.kallistesoft.unarrow.feature.game.Replay
+import ca.kallistesoft.unarrow.feature.history.HistoryScreen
 import ca.kallistesoft.unarrow.feature.home.HomeScreen
 import ca.kallistesoft.unarrow.feature.settings.SettingsScreen
 import ca.kallistesoft.unarrow.navigation.Game
+import ca.kallistesoft.unarrow.navigation.History
 import ca.kallistesoft.unarrow.navigation.Home
 import ca.kallistesoft.unarrow.navigation.Settings
 
-/** App navigation (Navigation 3): Home, a game, Settings. Each entry gets its own saved state and ViewModels. */
+/** App navigation (Navigation 3): Home, a game (or a replay), the history, Settings. Each entry gets its own saved state and ViewModels. */
 @Composable
 fun UnarrowApp(versionName: String) {
     val backStack = rememberNavBackStack(Home)
@@ -51,9 +54,24 @@ fun UnarrowApp(versionName: String) {
                             onPlay = { open(Game(GameMode.LEVELS)) },
                             onDaily = { open(Game(GameMode.DAILY)) },
                             onSettings = { open(Settings) },
+                            onHistory = { open(History) },
+                            onReplayDaily = { day -> open(Game(GameMode.DAILY, replay = day)) },
                         )
                     }
-                    entry<Game> { key -> GameScreen(mode = key.mode, onBack = back) }
+                    entry<Game> { key ->
+                        GameScreen(
+                            mode = key.mode,
+                            onBack = back,
+                            replay = key.replay?.let { Replay(it, key.fromHistory) },
+                        )
+                    }
+                    entry<History> {
+                        HistoryScreen(
+                            onBack = back,
+                            onReplayLevel = { level -> open(Game(GameMode.LEVELS, level.toLong(), fromHistory = true)) },
+                            onReplayDaily = { day -> open(Game(GameMode.DAILY, day, fromHistory = true)) },
+                        )
+                    }
                     entry<Settings> { SettingsScreen(onBack = back, versionName = versionName) }
                 },
             )

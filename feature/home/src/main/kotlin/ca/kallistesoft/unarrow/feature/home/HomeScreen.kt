@@ -10,6 +10,7 @@ import androidx.compose.animation.core.tween
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -28,6 +29,7 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.rounded.ArrowForward
 import androidx.compose.material.icons.rounded.CheckCircle
+import androidx.compose.material.icons.rounded.History
 import androidx.compose.material.icons.rounded.Key
 import androidx.compose.material.icons.rounded.LocalFireDepartment
 import androidx.compose.material.icons.rounded.Lock
@@ -49,6 +51,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
@@ -98,6 +101,8 @@ fun HomeScreen(
     onPlay: () -> Unit,
     onDaily: () -> Unit,
     onSettings: () -> Unit,
+    onHistory: () -> Unit = {},
+    onReplayDaily: (day: Long) -> Unit = {},
     viewModel: HomeViewModel = hiltViewModel(),
 ) {
     val state by viewModel.uiState.collectAsStateWithLifecycle()
@@ -108,7 +113,8 @@ fun HomeScreen(
         onDaily,
         onSettings,
         onRemoveAds = viewModel::buyRemoveAds,
-        onRetryDaily = { viewModel.retryDaily(onDaily) },
+        onRetryDaily = { viewModel.retryDaily(onReplayDaily) },
+        onHistory = onHistory,
         onSound = viewModel::toggleSound,
         onWebsite = { runCatching { uriHandler.openUri(STUDIO_URL) } },
     )
@@ -131,6 +137,7 @@ internal fun HomeContent(
     onRetryDaily: () -> Unit = {},
     onSound: () -> Unit = {},
     onWebsite: () -> Unit = {},
+    onHistory: () -> Unit = {},
 ) {
     val motion = !LocalInspectionMode.current && !rememberReducedMotion()
     val gradient = Brush.verticalGradient(listOf(MaterialTheme.colorScheme.background, UnarrowTheme.brand.gradientEnd))
@@ -155,6 +162,9 @@ internal fun HomeContent(
                 ) {
                     Row(verticalAlignment = Alignment.CenterVertically) {
                         Spacer(Modifier.weight(1f))
+                        IconButton(onClick = onHistory) {
+                            Icon(Icons.Rounded.History, contentDescription = stringResource(R.string.history))
+                        }
                         IconButton(onClick = onSettings) {
                             Icon(Icons.Rounded.Settings, contentDescription = stringResource(R.string.settings))
                         }
@@ -183,7 +193,7 @@ internal fun HomeContent(
                                 pulse = motion,
                                 modifier = Modifier.padding(top = Spacing.m),
                             )
-                            Records(state)
+                            Records(state, onHistory)
                         }
                     }
                     Entrance(4, motion) {
@@ -251,9 +261,17 @@ private fun Title() {
 
 /** The player's records: highest level, every star earned, the longest daily streak. */
 @Composable
-private fun Records(state: HomeUiState) {
-    // Three equal columns: a long label ("BEST STREAK") wraps instead of widening its column.
-    Row(Modifier.fillMaxWidth().testTag("records")) {
+private fun Records(state: HomeUiState, onHistory: () -> Unit) {
+    // Three equal columns: a long label ("BEST STREAK") wraps instead of widening its column. Tapping them opens the
+    // history.
+    Row(
+        Modifier
+            .fillMaxWidth()
+            .clip(MaterialTheme.shapes.large)
+            .clickable(onClickLabel = stringResource(R.string.history), onClick = onHistory)
+            .padding(vertical = Spacing.s)
+            .testTag("records"),
+    ) {
         Record(state.level, R.string.home_record_level, Modifier.weight(1f))
         Record(state.totalStars, R.string.home_record_stars, Modifier.weight(1f))
         Record(state.bestStreak, R.string.home_record_streak, Modifier.weight(1f))

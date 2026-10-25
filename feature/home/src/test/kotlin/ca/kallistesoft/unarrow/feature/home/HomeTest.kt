@@ -9,6 +9,7 @@ import androidx.compose.ui.test.performClick
 import ca.kallistesoft.unarrow.core.billing.Product
 import ca.kallistesoft.unarrow.core.data.DailyResult
 import ca.kallistesoft.unarrow.core.data.GameProgress
+import ca.kallistesoft.unarrow.core.data.LevelResult
 import ca.kallistesoft.unarrow.core.designsystem.UnarrowTheme
 import ca.kallistesoft.unarrow.core.game.Levels
 import ca.kallistesoft.unarrow.core.testing.FakeAds
@@ -141,7 +142,7 @@ class HomeTest {
         val vm = HomeViewModel(progress, FakePurchases(), FakeAds(), { today })
         var dailies = 0
         compose.setContent {
-            UnarrowTheme { HomeScreen(onPlay = {}, onDaily = { dailies++ }, onSettings = {}, viewModel = vm) }
+            UnarrowTheme { HomeScreen(onPlay = {}, onDaily = {}, onSettings = {}, onReplayDaily = { dailies++ }, viewModel = vm) }
         }
         compose.onNodeWithText("Play again (ad)").performClick()
         compose.waitForIdle()
@@ -176,7 +177,11 @@ class HomeTest {
     @Test
     fun `the records add up the progress, and the sound button flips the setting`() = runTest {
         val progress = FakeProgressRepository(
-            GameProgress(level = 21, levelStars = mapOf(1 to 3, 2 to 2, 3 to 3), bestDailyStreak = 6),
+            GameProgress(
+                level = 21,
+                levelResults = mapOf(1 to LevelResult(3), 2 to LevelResult(2, 50), 3 to LevelResult(3, 70)),
+                bestDailyStreak = 6,
+            ),
             today = today,
         )
         val vm = HomeViewModel(progress, FakePurchases(), FakeAds(), { today })
@@ -266,5 +271,30 @@ class HomeTest {
         compose.waitForIdle()
         assertFalse(progress.state.value.soundOn)
         compose.onNodeWithText("kallistesoft.ca").performScrollTo().performClick() // Opens the browser (no-op here).
+    }
+
+    @Test
+    fun `the history opens from its button and from the records, and today's replay is today's daily`() = runTest {
+        var history = 0
+        compose.setContent {
+            UnarrowTheme {
+                HomeContent(
+                    HomeUiState(loading = false, level = 3),
+                    onPlay = {},
+                    onDaily = {},
+                    onSettings = {},
+                    onRemoveAds = {},
+                    onHistory = { history++ },
+                )
+            }
+        }
+        compose.onNodeWithContentDescription("History").performClick()
+        compose.onNodeWithTag("records").performClick()
+        assertEquals(2, history)
+
+        val vm = HomeViewModel(FakeProgressRepository(today = today), FakePurchases(), FakeAds(), { today })
+        var replayed: Long? = null
+        vm.retryDaily { replayed = it }
+        assertEquals(today, replayed)
     }
 }

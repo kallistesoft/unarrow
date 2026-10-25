@@ -19,8 +19,12 @@ data class GameProgress(
     val hapticsOn: Boolean = true,
     /** Last known "Remove ads" ownership, so ads stay off offline; Play Billing stays the source of truth. */
     val removeAdsOwned: Boolean = false,
-    /** The most stars earned on each solved level (1 to 3). */
+    /** Earlier versions' best stars per level, read once and moved to [levelResults] ([migrated]). */
     val levelStars: Map<Int, Int> = emptyMap(),
+    /** The best result of each solved level (most stars, then fastest), the history's Levels tab. */
+    val levelResults: Map<Int, LevelResult> = emptyMap(),
+    /** The best result of each solved daily, by epoch day, the history's Daily tab. */
+    val dailyResults: Map<Long, DailyResult> = emptyMap(),
     /** The best daily puzzle ever solved: the most stars, then the fastest. */
     val bestDaily: DailyResult? = null,
     /** The best try at the daily of [lastDailyDay] (a replay can improve it). */
@@ -36,7 +40,7 @@ data class GameProgress(
     fun dailyResult(today: Long): DailyResult? = lastDailyResult.takeIf { dailyDone(today) }
 
     /** Every star earned: the best of each solved level, added up. */
-    val totalStars: Int get() = levelStars.values.sum()
+    val totalStars: Int get() = levelResults.values.sumOf { it.stars }
 
     /** The streak still counts until the end of the day after the last solved daily. */
     fun currentStreak(today: Long): Int =
@@ -51,6 +55,21 @@ data class GameProgress(
 @Serializable
 enum class AppTheme { SYSTEM, LIGHT, DARK }
 
+/**
+ * A solved level: its stars (1 to 3) and the time it took, in seconds; [seconds] is null for levels solved before
+ * times were kept (shown "—").
+ */
+@Serializable
+data class LevelResult(val stars: Int, val seconds: Int? = null) {
+    /** More stars win; with as many, the faster time (an unknown time is the slowest); a tie keeps the earlier. */
+    fun beats(other: LevelResult?): Boolean = other == null || stars > other.stars ||
+        (stars == other.stars && seconds != null && (other.seconds == null || seconds < other.seconds))
+}
+
+private fun LevelResult.bestOf(other: LevelResult?): LevelResult = other?.takeUnless { beats(it) } ?: this
+
+private fun DailyResult.bestOf(other: DailyResult?): DailyResult = other?.takeUnless { beats(it) } ?: this
+
 /** A solved daily puzzle: its stars (1 to 3) and the time it took, in seconds. */
 @Serializable
 data class DailyResult(val stars: Int, val seconds: Int) {
@@ -59,29 +78,59 @@ data class DailyResult(val stars: Int, val seconds: Int) {
         other == null || stars > other.stars || (stars == other.stars && seconds < other.seconds)
 }
 
-/** [progress] with [level] solved for [stars]: the next level opens, the level keeps its best stars. */
-fun GameProgress.withLevelSolved(level: Int, stars: Int): GameProgress = copy(
+/** [progress] with [level] solved as [result]: the next level opens, the level keeps its best result. */
+fun GameProgress.withLevelSolved(level: Int, result: LevelResult): GameProgress = copy(
     level = maxOf(this.level, level + 1),
     wins = wins + 1,
-    levelStars = levelStars + (level to maxOf(stars, levelStars[level] ?: 0)),
+    levelResults = levelResults + (level to result.bestOf(levelResults[level])),
 )
+
+/** [level] replayed from the history: only its best result can change, never the current level. */
+fun GameProgress.withLevelReplayed(level: Int, result: LevelResult): GameProgress =
+    copy(levelResults = levelResults + (level to result.bestOf(levelResults[level])))
+
+/**
+ * The daily of [day] replayed (from the history, or today's from home): its best result, the best daily and today's
+ * result can improve; the streak and the last solved day never move.
+ */
+fun GameProgress.withDailyReplayed(day: Long, result: DailyResult): GameProgress = copy(
+    dailyResults = dailyResults + (day to result.bestOf(dailyResults[day])),
+    bestDaily = result.bestOf(bestDaily),
+    lastDailyResult = if (day == lastDailyDay) result.bestOf(lastDailyResult) else lastDailyResult,
+)
+
+/**
+ * Data saved by earlier versions, moved to the current fields: best stars per level become results with no time, and
+ * the last solved daily (the only one known) starts the daily history.
+ */
+fun GameProgress.migrated(): GameProgress {
+    var progress = this
+    if (levelStars.isNotEmpty()) {
+        val old = levelStars.mapValues { (_, stars) -> LevelResult(stars) }
+        progress = progress.copy(levelResults = old + levelResults, levelStars = emptyMap())
+    }
+    val day = lastDailyDay
+    val result = lastDailyResult
+    if (day != null && result != null && day !in dailyResults) {
+        progress = progress.copy(dailyResults = progress.dailyResults + (day to result))
+    }
+    return progress
+}
 
 /**
  * [progress] with the daily of [day] solved as [result]: the streak grows if the day before was solved too, else
  * starts again at 1; solving the same day again changes nothing but the best result.
  */
 fun GameProgress.withDailySolved(day: Long, result: DailyResult): GameProgress {
-    val best = if (result.beats(bestDaily)) result else bestDaily
-    if (lastDailyDay == day) {
-        return copy(bestDaily = best, lastDailyResult = if (result.beats(lastDailyResult)) result else lastDailyResult)
-    }
+    if (lastDailyDay == day) return withDailyReplayed(day, result)
     val streak = if (lastDailyDay == day - 1) dailyStreak + 1 else 1
     return copy(
         dailyStreak = streak,
         bestDailyStreak = maxOf(bestDailyStreak, streak),
         lastDailyDay = day,
         wins = wins + 1,
-        bestDaily = best,
+        bestDaily = result.bestOf(bestDaily),
         lastDailyResult = result,
+        dailyResults = dailyResults + (day to result.bestOf(dailyResults[day])),
     )
 }

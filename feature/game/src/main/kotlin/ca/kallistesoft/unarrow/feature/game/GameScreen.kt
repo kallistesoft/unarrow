@@ -68,13 +68,17 @@ import ca.kallistesoft.unarrow.core.game.Stars
 import ca.kallistesoft.unarrow.core.ui.R
 import kotlinx.coroutines.launch
 
-/** A game: the puzzles of [mode], one after the other. [onBack] goes home. */
+/**
+ * A game: the puzzles of [mode], one after the other, or one puzzle played again ([replay]). [onBack] goes back (home,
+ * or the history).
+ */
 @Composable
 fun GameScreen(
     mode: GameMode,
     onBack: () -> Unit,
+    replay: Replay? = null,
     viewModel: GameViewModel = hiltViewModel<GameViewModel, GameViewModel.Factory>(
-        creationCallback = { factory -> factory.create(mode) },
+        creationCallback = { factory -> factory.create(mode, replay) },
     ),
 ) {
     val state by viewModel.uiState.collectAsStateWithLifecycle()
@@ -333,10 +337,12 @@ private fun ResultPanel(state: GameUiState, actions: GameActions) {
                 if (session.stars < Stars.MAX) {
                     Chip(stringResource(R.string.game_target, timeText(Stars.targetSeconds(session.startArrowCount))))
                 }
-                if (session.mode == GameMode.LEVELS) {
-                    PrimaryButton(stringResource(R.string.game_next), onClick = actions.onNext)
-                } else {
-                    PrimaryButton(stringResource(R.string.game_home), onClick = actions.onHome)
+                when {
+                    session.replay?.fromHistory == true ->
+                        PrimaryButton(stringResource(R.string.game_back_history), onClick = actions.onHome)
+                    session.mode == GameMode.LEVELS && session.replay == null ->
+                        PrimaryButton(stringResource(R.string.game_next), onClick = actions.onNext)
+                    else -> PrimaryButton(stringResource(R.string.game_home), onClick = actions.onHome)
                 }
                 val text = shareText(session)
                 val title = stringResource(R.string.share_chooser)

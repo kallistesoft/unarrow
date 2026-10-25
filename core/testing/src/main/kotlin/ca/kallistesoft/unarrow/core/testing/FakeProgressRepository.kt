@@ -3,8 +3,11 @@ package ca.kallistesoft.unarrow.core.testing
 import ca.kallistesoft.unarrow.core.data.AppTheme
 import ca.kallistesoft.unarrow.core.data.DailyResult
 import ca.kallistesoft.unarrow.core.data.GameProgress
+import ca.kallistesoft.unarrow.core.data.LevelResult
 import ca.kallistesoft.unarrow.core.data.ProgressRepository
+import ca.kallistesoft.unarrow.core.data.withDailyReplayed
 import ca.kallistesoft.unarrow.core.data.withDailySolved
+import ca.kallistesoft.unarrow.core.data.withLevelReplayed
 import ca.kallistesoft.unarrow.core.data.withLevelSolved
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -14,8 +17,16 @@ class FakeProgressRepository(initial: GameProgress = GameProgress(), var today: 
     val state = MutableStateFlow(initial)
     override val progress: StateFlow<GameProgress> = state
 
-    override suspend fun completeLevel(level: Int, stars: Int) {
-        state.value = state.value.withLevelSolved(level, stars)
+    override suspend fun completeLevel(level: Int, result: LevelResult) {
+        state.value = state.value.withLevelSolved(level, result)
+    }
+
+    override suspend fun replayLevel(level: Int, result: LevelResult) {
+        state.value = state.value.withLevelReplayed(level, result)
+    }
+
+    override suspend fun replayDaily(day: Long, result: DailyResult) {
+        state.value = state.value.withDailyReplayed(day, result)
     }
 
     override suspend fun completeDaily(result: DailyResult) {

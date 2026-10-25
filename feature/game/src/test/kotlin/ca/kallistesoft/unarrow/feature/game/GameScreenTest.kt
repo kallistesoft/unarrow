@@ -132,6 +132,20 @@ class GameScreenTest {
     }
 
     @Test
+    fun `a replay's win panel goes back to the history, or home, never to a next level`() {
+        var home = 0
+        var state by androidx.compose.runtime.mutableStateOf(
+            GameUiState(session(status = GameStatus.WON, stars = 3).copy(replay = Replay(5, fromHistory = true))),
+        )
+        compose.setContent { UnarrowTheme { GameContent(state, GameActions(onHome = { home++ })) } }
+        compose.onNodeWithText("Next level").assertDoesNotExist()
+        compose.onNodeWithText("Back to history").performClick()
+        state = state.copy(session = state.session!!.copy(replay = Replay(5, fromHistory = false)))
+        compose.onNodeWithText("Home").performClick()
+        assertEquals(2, home)
+    }
+
+    @Test
     fun `the best result shows only when this one didn't beat it`() {
         show(GameUiState(session(status = GameStatus.WON, stars = 3), bestStars = 3))
         compose.onNodeWithTag("stars").assertExists()
@@ -316,7 +330,7 @@ class GameScreenTest {
     fun `the screen plays a daily with its ViewModel and goes home after the win`() {
         val ads = FakeAds()
         val vm = GameViewModel(
-            GameMode.DAILY, FakeProgressRepository(), { Levels.FIRST_DAILY_EPOCH_DAY }, Puzzles(Dispatchers.Unconfined), ads,
+            GameMode.DAILY, null, FakeProgressRepository(), { Levels.FIRST_DAILY_EPOCH_DAY }, Puzzles(Dispatchers.Unconfined), ads,
             ads, FakePurchases(),
             FakeEngagement(), FakeEngagement(), ads,
         )

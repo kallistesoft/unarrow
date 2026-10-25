@@ -26,10 +26,16 @@ interface ProgressRepository {
     val progress: Flow<GameProgress>
 
     /**
-     * [level] was solved for [stars]: the next one opens (replaying an older level opens nothing new) and the level
-     * keeps its best stars.
+     * [level] was solved as [result]: the next one opens (replaying an older level opens nothing new) and the level
+     * keeps its best result.
      */
-    suspend fun completeLevel(level: Int, stars: Int)
+    suspend fun completeLevel(level: Int, result: LevelResult)
+
+    /** [level] was replayed from the history: only its best result can change. */
+    suspend fun replayLevel(level: Int, result: LevelResult)
+
+    /** The daily of [day] was replayed: only its best result (and the best daily) can change, never the streak. */
+    suspend fun replayDaily(day: Long, result: DailyResult)
 
     /**
      * Today's daily puzzle was solved as [result]: the streak grows if yesterday's was too, else starts again at 1, and
@@ -63,8 +69,16 @@ internal class DataStoreProgressRepository @Inject constructor(
 ) : ProgressRepository {
     override val progress: Flow<GameProgress> = store.data
 
-    override suspend fun completeLevel(level: Int, stars: Int) {
-        store.updateData { it.withLevelSolved(level, stars) }
+    override suspend fun completeLevel(level: Int, result: LevelResult) {
+        store.updateData { it.withLevelSolved(level, result) }
+    }
+
+    override suspend fun replayLevel(level: Int, result: LevelResult) {
+        store.updateData { it.withLevelReplayed(level, result) }
+    }
+
+    override suspend fun replayDaily(day: Long, result: DailyResult) {
+        store.updateData { it.withDailyReplayed(day, result) }
     }
 
     override suspend fun completeDaily(result: DailyResult) {
@@ -118,7 +132,7 @@ internal object GameProgressSerializer : Serializer<GameProgress> {
     override val defaultValue = GameProgress()
 
     override suspend fun readFrom(input: InputStream): GameProgress = try {
-        json.decodeFromString(GameProgress.serializer(), input.readBytes().decodeToString())
+        json.decodeFromString(GameProgress.serializer(), input.readBytes().decodeToString()).migrated()
     } catch (e: SerializationException) {
         throw CorruptionException("Unreadable progress file", e)
     }

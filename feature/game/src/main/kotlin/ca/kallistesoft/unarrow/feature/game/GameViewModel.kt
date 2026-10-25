@@ -8,6 +8,7 @@ import ca.kallistesoft.unarrow.core.ads.RewardedAds
 import ca.kallistesoft.unarrow.core.billing.Product
 import ca.kallistesoft.unarrow.core.billing.Purchases
 import ca.kallistesoft.unarrow.core.data.DailyResult
+import ca.kallistesoft.unarrow.core.data.LevelResult
 import ca.kallistesoft.unarrow.core.data.ProgressRepository
 import ca.kallistesoft.unarrow.core.data.Today
 import ca.kallistesoft.unarrow.core.engagement.ReviewPrompt
@@ -41,6 +42,7 @@ import kotlinx.coroutines.launch
 @HiltViewModel(assistedFactory = GameViewModel.Factory::class)
 class GameViewModel @AssistedInject constructor(
     @Assisted private val mode: GameMode,
+    @Assisted private val replay: Replay?,
     private val progress: ProgressRepository,
     private val today: Today,
     private val puzzles: Puzzles,
@@ -53,7 +55,7 @@ class GameViewModel @AssistedInject constructor(
 ) : ViewModel() {
     @AssistedFactory
     interface Factory {
-        fun create(mode: GameMode): GameViewModel
+        fun create(mode: GameMode, replay: Replay?): GameViewModel
     }
 
     private val session = MutableStateFlow<GameSession?>(null)
@@ -80,7 +82,7 @@ class GameViewModel @AssistedInject constructor(
             soundOn = progress.soundOn,
             hapticsOn = progress.hapticsOn,
             banner = banner,
-            bestStars = if (levels) progress.levelStars[session.level] else null,
+            bestStars = if (levels) progress.levelResults[session.level]?.stars else null,
             bestDaily = if (session?.mode == GameMode.DAILY) progress.bestDaily else null,
         )
     }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), GameUiState())
@@ -88,16 +90,17 @@ class GameViewModel @AssistedInject constructor(
     private suspend fun load() {
         val level = progress.progress.first().level
         session.value = when (mode) {
-            GameMode.LEVELS -> levelSession(level)
+            GameMode.LEVELS -> levelSession(replay?.id?.toInt() ?: level)
             GameMode.DAILY -> {
-                val day = today()
-                withTip(GameSession(mode, level, Levels.dailyNumber(day), puzzles.daily(day), startArrowCount = 0))
+                val day = replay?.id ?: today()
+                val board = puzzles.daily(day)
+                withTip(GameSession(mode, level, Levels.dailyNumber(day), board, 0, replay = replay, day = day))
             }
         }
     }
 
     private suspend fun levelSession(level: Int): GameSession =
-        withTip(GameSession(GameMode.LEVELS, level, dailyNumber = 0, puzzles.level(level), startArrowCount = 0))
+        withTip(GameSession(GameMode.LEVELS, level, dailyNumber = 0, puzzles.level(level), startArrowCount = 0, replay = replay))
 
     /** Counts the arrows and adds the tip for a mechanic the player meets for the first time, marking it seen. */
     private suspend fun withTip(session: GameSession): GameSession {
@@ -153,11 +156,14 @@ class GameViewModel @AssistedInject constructor(
 
     private fun win(played: GameSession) {
         viewModelScope.launch {
-            when (played.mode) {
-                GameMode.LEVELS -> progress.completeLevel(played.level, played.stars)
-                GameMode.DAILY -> progress.completeDaily(DailyResult(played.stars, played.seconds))
+            val replayed = played.replay != null
+            when {
+                played.mode == GameMode.LEVELS && replayed -> progress.replayLevel(played.level, LevelResult(played.stars, played.seconds))
+                played.mode == GameMode.LEVELS -> progress.completeLevel(played.level, LevelResult(played.stars, played.seconds))
+                replayed -> progress.replayDaily(played.day, DailyResult(played.stars, played.seconds))
+                else -> progress.completeDaily(DailyResult(played.stars, played.seconds))
             }
-            review.afterWin()
+            if (!replayed) review.afterWin()
         }
     }
 
@@ -196,6 +202,8 @@ class GameViewModel @AssistedInject constructor(
         session.value = GameSession(
             current.mode, current.level, current.dailyNumber, current.start, current.start.arrows.size, start = current.start,
             tip = current.tip, // Kept, so the board doesn't jump.
+            replay = current.replay,
+            day = current.day,
         )
     }
 
@@ -229,7 +237,7 @@ class GameViewModel @AssistedInject constructor(
     /** After a solved level: the interstitial if one is due, then the next level. */
     fun next() {
         val current = session.value ?: return
-        if (current.status != GameStatus.WON || current.mode != GameMode.LEVELS) return
+        if (current.status != GameStatus.WON || current.mode != GameMode.LEVELS || current.replay != null) return
         viewModelScope.launch {
             interstitials.showAfterPuzzle(current.level)
             session.value = null // The spinner while the next board is made.
@@ -237,10 +245,10 @@ class GameViewModel @AssistedInject constructor(
         }
     }
 
-    /** Leaving after a solved daily: its interstitial (if due) shows before going home. */
+    /** Leaving after a solved daily: its interstitial (if due) shows before going home; none after a replay. */
     suspend fun leaveAfterWin() {
         val current = session.value ?: return
-        if (current.status == GameStatus.WON) interstitials.showAfterPuzzle(current.level)
+        if (current.status == GameStatus.WON && current.replay == null) interstitials.showAfterPuzzle(current.level)
     }
 
     fun buyHints() {

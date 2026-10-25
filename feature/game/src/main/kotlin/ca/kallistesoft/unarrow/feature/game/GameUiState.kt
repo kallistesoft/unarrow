@@ -4,6 +4,13 @@ import ca.kallistesoft.unarrow.core.data.DailyResult
 import ca.kallistesoft.unarrow.core.game.Arrow
 import ca.kallistesoft.unarrow.core.game.Board
 
+/**
+ * A puzzle played again after a rewarded ad: level [id], or the daily of epoch day [id]. A replay only improves that
+ * puzzle's best result (never the current level, the streak or the last solved day) and has no interstitial.
+ * [fromHistory]: the win panel goes back to the history (else home).
+ */
+data class Replay(val id: Long, val fromHistory: Boolean)
+
 /** Which puzzles a game screen plays. */
 enum class GameMode {
     /** The player's next level, then the ones after it. */
@@ -54,6 +61,10 @@ data class GameSession(
     val tip: Tip? = null,
     /** A hint found no perfect line left from here. */
     val stuck: Boolean = false,
+    /** Played again from the history or the home card ([Replay]), or null. */
+    val replay: Replay? = null,
+    /** The daily's epoch day (DAILY), 0 for levels. */
+    val day: Long = 0,
 )
 
 data class GameUiState(

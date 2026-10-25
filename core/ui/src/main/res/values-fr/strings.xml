@@ -66,6 +66,7 @@
     </plurals>
     <string name="game_next">Niveau suivant</string>
     <string name="game_home">Accueil</string>
+    <string name="game_back_history">Retour à l’historique</string>
     <string name="game_share">Partager</string>
     <string name="game_lost">Plus de vies</string>
     <string name="game_lost_body">Une flèche bloquée glisse et coûte une vie. Regardez avant de toucher.</string>
@@ -97,6 +98,17 @@
     <string name="share_daily">Unarrow, défi n° %1$d %2$s</string>
     <string name="share_play">À vous de jouer : %1$s</string>
     <string name="share_chooser">Partager votre résultat</string>
+
+    <!-- Historique -->
+    <string name="history">Historique</string>
+    <string name="history_levels">Niveaux</string>
+    <string name="history_daily">Défis</string>
+    <string name="history_replay">Rejouer (pub)</string>
+    <string name="history_no_ad">Aucune pub disponible pour le moment. Réessayez dans un instant.</string>
+    <string name="history_empty_levels">Aucun niveau réussi pour l’instant.</string>
+    <string name="history_empty_daily">Aucun défi réussi pour l’instant.</string>
+    <string name="history_no_time">—</string>
+    <string name="history_no_time_label">temps inconnu</string>
 
     <!-- Paramètres -->
     <string name="settings_sound">Son</string>

@@ -6,6 +6,8 @@
     <string name="home_daily_done">Réussi aujourd’hui. Revenez demain!</string>
     <string name="home_daily_retry_ad">Rejouer (annonce)</string>
     <string name="game_hint_ad">Indice (annonce)</string>
+    <string name="history_replay">Rejouer (annonce)</string>
+    <string name="history_no_ad">Aucune annonce disponible pour le moment. Réessayez dans un instant.</string>
     <string name="game_won">Réussi!</string>
     <string name="game_extra_life">Regarder une annonce : +1 vie</string>
     <string name="settings_restore">Récupérer les achats</string>

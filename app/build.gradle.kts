@@ -116,6 +116,7 @@ dependencies {
     implementation(project(":core:ui"))
     implementation(project(":core:update"))
     implementation(project(":feature:game"))
+    implementation(project(":feature:history"))
     implementation(project(":feature:home"))
     implementation(project(":feature:settings"))
 

@@ -23,8 +23,8 @@ class ProgressRepositoryTest {
     @Test
     fun `solving a level opens the next one and counts a win`() = runTest {
         val repo = repository()
-        repo.completeLevel(1, stars = 2)
-        repo.completeLevel(2, stars = 2)
+        repo.completeLevel(1, LevelResult(2, 30))
+        repo.completeLevel(2, LevelResult(2, 30))
         val p = repo.progress.first()
         assertEquals(3, p.level)
         assertEquals(2, p.wins)
@@ -33,8 +33,8 @@ class ProgressRepositoryTest {
     @Test
     fun `replaying an old level opens nothing new`() = runTest {
         val repo = repository()
-        repo.completeLevel(4, stars = 2)
-        repo.completeLevel(2, stars = 2)
+        repo.completeLevel(4, LevelResult(2, 30))
+        repo.completeLevel(2, LevelResult(2, 30))
         assertEquals(5, repo.progress.first().level)
     }
 
@@ -75,7 +75,54 @@ class ProgressRepositoryTest {
     @Test
     fun `total stars add up the best of each level`() {
         assertEquals(0, GameProgress().totalStars)
-        assertEquals(7, GameProgress(levelStars = mapOf(1 to 3, 2 to 1, 5 to 3)).totalStars)
+        assertEquals(7, GameProgress(levelResults = mapOf(1 to LevelResult(3), 2 to LevelResult(1), 5 to LevelResult(3, 9))).totalStars)
+    }
+
+    @Test
+    fun `the best result is the most stars, then the fastest, a tie keeps the earlier`() {
+        assertTrue(LevelResult(2, 90).beats(null))
+        assertTrue(LevelResult(3, 200).beats(LevelResult(2, 10)))
+        assertTrue(LevelResult(2, 50).beats(LevelResult(2, 60)))
+        assertFalse("a tie keeps the earlier", LevelResult(2, 60).beats(LevelResult(2, 60)))
+        assertTrue("a known time beats an unknown one", LevelResult(2, 60).beats(LevelResult(2)))
+        assertFalse(LevelResult(2).beats(LevelResult(2, 60)))
+        assertFalse(LevelResult(2).beats(LevelResult(2)))
+    }
+
+    @Test
+    fun `replays only improve the best results, never the level, the last daily or the streak`() = runTest {
+        val repo = repository()
+        repo.completeLevel(5, LevelResult(2, 80))
+        repo.replayLevel(5, LevelResult(1, 20))
+        repo.replayLevel(3, LevelResult(3, 40))
+        var p = repo.progress.first()
+        assertEquals(6, p.level)
+        assertEquals(mapOf(5 to LevelResult(2, 80), 3 to LevelResult(3, 40)), p.levelResults)
+
+        repo.completeDaily(DailyResult(2, 100))
+        repo.replayDaily(day - 3, DailyResult(3, 70))
+        repo.replayDaily(day, DailyResult(3, 90))
+        p = repo.progress.first()
+        assertEquals(day, p.lastDailyDay)
+        assertEquals(1 to 1, p.dailyStreak to p.bestDailyStreak)
+        assertEquals(mapOf(day to DailyResult(3, 90), day - 3 to DailyResult(3, 70)), p.dailyResults)
+        assertEquals(DailyResult(3, 70), p.bestDaily)
+        assertEquals("today's result improved", DailyResult(3, 90), p.dailyResult(day))
+        assertEquals(2, p.wins)
+    }
+
+    @Test
+    fun `progress saved by earlier versions moves to the history`() = runTest {
+        val old = """{"level":9,"levelStars":{"3":2,"8":3},"lastDailyDay":20800,"lastDailyResult":{"stars":3,"seconds":42},
+            |"bestDaily":{"stars":3,"seconds":40}}""".trimMargin().byteInputStream()
+        val p = GameProgressSerializer.readFrom(old)
+        assertEquals(mapOf(3 to LevelResult(2), 8 to LevelResult(3)), p.levelResults)
+        assertTrue(p.levelStars.isEmpty())
+        assertEquals("only the last daily's day is known", mapOf(20_800L to DailyResult(3, 42)), p.dailyResults)
+        assertEquals(p, p.migrated())
+        assertEquals(GameProgress(), GameProgress().migrated())
+        // A new result for a migrated level keeps the best: its stars, now with a time.
+        assertEquals(LevelResult(2, 50), p.withLevelReplayed(3, LevelResult(2, 50)).levelResults[3])
     }
 
     @Test
@@ -89,12 +136,12 @@ class ProgressRepositoryTest {
     @Test
     fun `each level keeps its best stars`() = runTest {
         val repo = repository()
-        repo.completeLevel(3, stars = 2)
-        repo.completeLevel(3, stars = 1)
-        repo.completeLevel(4, stars = 3)
-        assertEquals(mapOf(3 to 2, 4 to 3), repo.progress.first().levelStars)
-        repo.completeLevel(3, stars = 3)
-        assertEquals(3, repo.progress.first().levelStars[3])
+        repo.completeLevel(3, LevelResult(2, 30))
+        repo.completeLevel(3, LevelResult(1, 30))
+        repo.completeLevel(4, LevelResult(3, 30))
+        assertEquals(mapOf(3 to LevelResult(2, 30), 4 to LevelResult(3, 30)), repo.progress.first().levelResults)
+        repo.completeLevel(3, LevelResult(3, 30))
+        assertEquals(LevelResult(3, 30), repo.progress.first().levelResults[3])
     }
 
     @Test
@@ -154,7 +201,10 @@ class ProgressRepositoryTest {
     @Test
     fun `progress survives a write and read, unknown keys ignored`() = runTest {
         val out = ByteArrayOutputStream()
-        val progress = GameProgress(level = 12, hints = 7, levelStars = mapOf(3 to 2), bestDaily = DailyResult(3, 42))
+        val progress = GameProgress(
+            level = 12, hints = 7, levelResults = mapOf(3 to LevelResult(2)), bestDaily = DailyResult(3, 42),
+            dailyResults = mapOf(20_800L to DailyResult(3, 42)),
+        )
         GameProgressSerializer.writeTo(progress, out)
         assertEquals(progress, GameProgressSerializer.readFrom(ByteArrayInputStream(out.toByteArray())))
         val withExtra = """{"level":3,"future":true}""".byteInputStream()
