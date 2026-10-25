@@ -89,8 +89,7 @@
     <string name="settings_language">Language</string>
     <string name="settings_language_system">System default</string>
     <string name="language_en">English</string>
-    <string name="language_fr_ca">Français (Canada)</string>
-    <string name="language_fr_fr">Français (France)</string>
+    <string name="language_fr">Français</string>
     <string name="settings_purchases">Purchases</string>
     <string name="settings_restore">Restore purchases</string>
     <string name="settings_restored">Purchases restored</string>

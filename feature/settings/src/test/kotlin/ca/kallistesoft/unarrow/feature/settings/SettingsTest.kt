@@ -104,7 +104,7 @@ class SettingsTest {
         compose.onNodeWithText("Sound").performClick()
         compose.onNodeWithText("Vibration").performClick()
         compose.onNodeWithText("Dark").performScrollTo().performClick()
-        compose.onNodeWithText("Français (Canada)").performScrollTo().performClick()
+        compose.onNodeWithText("Français").performScrollTo().performClick()
         compose.onNodeWithText("Restore purchases").performScrollTo().performClick()
         compose.onNodeWithText("Purchases restored").assertExists()
         compose.onNodeWithText("Privacy options").performScrollTo().performClick()
@@ -112,7 +112,7 @@ class SettingsTest {
         compose.onNodeWithText("Version 1.2.3").assertExists()
         compose.onNodeWithContentDescription("Back").performClick()
         assertEquals(
-            listOf("sound false", "haptics false", "theme DARK", "FRENCH_CANADA", "restore", "privacy", "rate", "back"),
+            listOf("sound false", "haptics false", "theme DARK", "FRENCH", "restore", "privacy", "rate", "back"),
             calls,
         )
     }
@@ -135,11 +135,29 @@ class SettingsTest {
     @Test
     fun `language tags map to the app's languages`() {
         assertEquals(AppLanguage.SYSTEM, AppLanguage.fromTags(""))
-        assertEquals(AppLanguage.FRENCH_CANADA, AppLanguage.fromTags("fr-CA"))
-        assertEquals(AppLanguage.FRENCH_FRANCE, AppLanguage.fromTags("fr-FR,en"))
-        assertEquals(AppLanguage.FRENCH_FRANCE, AppLanguage.fromTags("fr-BE"))
+        assertEquals("earlier versions' choices read back as French", AppLanguage.FRENCH, AppLanguage.fromTags("fr-CA"))
+        assertEquals(AppLanguage.FRENCH, AppLanguage.fromTags("fr-FR,en"))
+        assertEquals(AppLanguage.FRENCH, AppLanguage.fromTags("fr"))
         assertEquals(AppLanguage.ENGLISH, AppLanguage.fromTags("en-GB"))
         assertEquals(AppLanguage.SYSTEM, AppLanguage.fromTags("de-DE"))
+    }
+
+    @Test
+    fun `French follows the phone's region - Quebec wording in Canada, France's elsewhere`() {
+        assertEquals("fr-CA", AppLanguage.FRENCH.tag(region = "CA"))
+        assertEquals("fr-FR", AppLanguage.FRENCH.tag(region = "FR"))
+        assertEquals("fr-FR", AppLanguage.FRENCH.tag(region = ""))
+        assertEquals("en", AppLanguage.ENGLISH.tag(region = "CA"))
+        assertEquals("", AppLanguage.SYSTEM.tag(region = "CA"))
+        assertEquals(3, AppLanguage.entries.size)
+    }
+
+    @Test
+    @Config(qualifiers = "fr-rCA")
+    fun `on a Canadian phone, French applies the Quebec wording`() {
+        assertEquals("CA", AppLanguage.systemRegion())
+        assertEquals("fr-CA", AppLanguage.FRENCH.tag())
+        AppLanguage.FRENCH.select() // Robolectric keeps no app locales without an AppCompat activity.
     }
 
     @Test

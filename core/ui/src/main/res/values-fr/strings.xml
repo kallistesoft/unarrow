@@ -95,8 +95,7 @@
     <string name="settings_language">Langue</string>
     <string name="settings_language_system">Langue du système</string>
     <string name="language_en">English</string>
-    <string name="language_fr_ca">Français (Canada)</string>
-    <string name="language_fr_fr">Français (France)</string>
+    <string name="language_fr">Français</string>
     <string name="settings_purchases">Achats</string>
     <string name="settings_restore">Restaurer les achats</string>
     <string name="settings_restored">Achats restaurés</string>
