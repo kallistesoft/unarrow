@@ -3,11 +3,11 @@
 Claude updates this file and pushes it after every step. Work happens on the `develop` branch; there will be no pull
 request until the release.
 
-**Now:** the app is built; waiting on the console steps below for the release.
-**CI:** ✅ green (run #10): conventions, all unit tests, coverage ≥ 90% per class, lint, debug APK, release APK and
-bundle (R8). The APKs and the `.aab` are in the run's `unarrow-<n>` artifact.
-**Blockers:** none. This build environment can't download the Android SDK, so the code is compiled and tested only by
-GitHub Actions, on every push.
+**Now:** harder puzzles, timer and stars, edge-to-edge fix done after the first test on the Pixel 10; waiting on the
+store graphics, listing translations, products and the first internal-testing upload (below).
+**CI:** ✅ green on every push: conventions, all unit tests, coverage ≥ 90% per class, lint, debug APK, release APK
+and bundle (R8). The APKs and the `.aab` are in the run's `unarrow-<n>` artifact.
+**Blockers:** none. Local builds work on this Mac (see CLAUDE.md); GitHub Actions stays the reference.
 
 ## Steps
 
@@ -34,41 +34,50 @@ GitHub Actions, on every push.
 | 18 | Coverage at 90% (Kover), lint clean, release (R8) build | ✅ | 70ca30f |
 | 19 | Store listing texts (en-US, fr-CA, fr-FR) and Data safety notes in `store/` | ✅ | 31e8ef8 |
 | 19b | Real AdMob IDs (release), banner under the board, interstitial pacing from Remote Config | ✅ | 112dca4, df6e762, f548391 |
-| 20 | Release: Firebase config secret, Play products, signed bundle, pull request `develop` → `main` | ⬜ waits on you | |
+| 19c | `testing-on-emulator` skill (emulator and the Pixel 10 over wireless adb) | ✅ | 075f8e9 |
+| 19d | Edge to edge: game and settings top bars below the status bar; banner above the gesture bar | ✅ | 2589788 |
+| 19e | Daily number never below #1 before the first daily | ✅ | ef78ca2 |
+| 19f | Harder puzzles: few free arrows, long chains, faster curve (seed salts bumped), `DifficultyTest` | ✅ | 0778542 |
+| 19g | Timer and stars (best per level, best daily), stars and time in shares | ✅ | f433acb |
+| 20 | Release: store graphics, listing translations, products, internal testing, pull request `develop` → `main` | ⬜ waits on you | |
 
 ✅ done · ⏳ in progress · ⬜ to do · ❌ blocked
 
 ## Needs you at release
 
-Claude can't sign in to Google's consoles. Until the remaining steps are done, CI builds without Firebase (no remote
-values, force update or Crashlytics) and the app shows no purchases.
+Done in the consoles:
 
-1. **Firebase:** ✅ project `unarrow-d140e` (contact@kallistesoft.ca) with both Android apps registered
-   (`ca.kallistesoft.unarrow`, `ca.kallistesoft.unarrow.debug`). Still to do:
-   - download `google-services.json` and save it as the GitHub secret `GOOGLE_SERVICES_JSON`;
-   - turn on Crashlytics;
-   - in Remote Config, add these parameters (the app uses the default until the console has a value):
+- ✅ **GitHub secrets:** `GOOGLE_SERVICES_JSON`, `UA_KEYSTORE_BASE64`, `UA_KEYSTORE_PASSWORD`, `UA_KEY_ALIAS`,
+  `UA_KEY_PASSWORD` (the upload key is kept outside the repo).
+- ✅ **Firebase:** project `unarrow-d140e` (contact@kallistesoft.ca), both Android apps registered
+  (`ca.kallistesoft.unarrow`, `ca.kallistesoft.unarrow.debug`). Remote Config v1 published with the 7 parameters
+  below. Crashlytics turns on by itself with the first crash report: nothing to switch on.
 
-     | Parameter | Type | Default | What it does |
-     |---|---|---|---|
-     | `min_version_code` | number | 0 | force update below this versionCode (`min_version_code_debug` for debug) |
-     | `ads_enabled` | boolean | true | every ad (interstitial, rewarded, banner) |
-     | `rewarded_ads` | boolean | true | "Watch an ad" for a hint or an extra life |
-     | `review_prompt` | boolean | true | asking for a Play rating |
-     | `interstitial_first_level` | number | 5 | first level after which interstitials may show (below 1: default) |
-     | `interstitial_every` | number | 3 | one interstitial every this many solved puzzles (below 1: default) |
-     | `interstitial_cap_seconds` | number | 180 | at most one interstitial every this many seconds (below 0: default) |
-2. **AdMob:** ✅ app "Unarrow" and its units (in `app/build.gradle.kts`, release builds only): app
-   `ca-app-pub-7557144664039757~7253132965`, interstitial `…/5991936465`, rewarded `…/9739609786`, banner
-   `…/4327501007`. Ad content rating T, sensitive categories blocked as for Block Daily, and the EU and US-states
-   consent messages include Unarrow. Keep AdMob's interstitial frequency cap no tighter than
-   `interstitial_cap_seconds`.
-3. **Play Console:** create the app "Unarrow: Daily Arrow Puzzle" (`ca.kallistesoft.unarrow`, free, game > puzzle), and
-   add these in-app products: `remove_ads` (one-time, $3.99) and `hints_10` (consumable, $0.99).
-4. **Privacy policy:** ✅ live at `https://kallistesoft.ca/en/privacy/unarrow/` (FR: `/confidentialite/unarrow/`); paste
-   the URL in Play Console (App content › Privacy policy).
-5. **Signing:** create an upload keystore and add the secrets `UA_KEYSTORE_BASE64`, `UA_KEYSTORE_PASSWORD`,
-   `UA_KEY_ALIAS` and `UA_KEY_PASSWORD` to the GitHub repo.
+  | Parameter | Type | Default | What it does |
+  |---|---|---|---|
+  | `min_version_code` | number | 0 | force update below this versionCode (`min_version_code_debug` for debug) |
+  | `ads_enabled` | boolean | true | every ad (interstitial, rewarded, banner) |
+  | `rewarded_ads` | boolean | true | "Watch an ad" for a hint or an extra life |
+  | `review_prompt` | boolean | true | asking for a Play rating |
+  | `interstitial_first_level` | number | 5 | first level after which interstitials may show (below 1: default) |
+  | `interstitial_every` | number | 3 | one interstitial every this many solved puzzles (below 1: default) |
+  | `interstitial_cap_seconds` | number | 180 | at most one interstitial every this many seconds (below 0: default) |
+- ✅ **AdMob:** app "Unarrow" and its units (in `app/build.gradle.kts`, release builds only): app
+  `ca-app-pub-7557144664039757~7253132965`, interstitial `…/5991936465`, rewarded `…/9739609786`, banner
+  `…/4327501007`. Ad content rating T, sensitive categories blocked as for Block Daily, the EU and US-states consent
+  messages include Unarrow. Keep AdMob's interstitial frequency cap no tighter than `interstitial_cap_seconds`.
+- ✅ **Play Console:** app "Unarrow: Daily Arrow Puzzle" created; privacy policy URL, ads, app access, government,
+  financial, health, advertising ID, target audience 13+, data safety and the IARC content rating (Everyone/ESRB,
+  Brazil 14+ because of in-app purchases) are filled in.
+- ✅ **Privacy policy:** `https://kallistesoft.ca/en/privacy/unarrow/` (FR: `/confidentialite/unarrow/`).
+
+Still open:
+
+1. **Store graphics:** 512 × 512 icon, 1024 × 500 feature graphic, phone screenshots.
+2. **Listing translations:** paste the fr-CA and fr-FR texts from `store/listing-fr-CA.md` and `store/listing-fr-FR.md`.
+3. **In-app products:** `remove_ads` (one-time, $3.99) and `hints_10` (consumable, $0.99); Play only allows them once
+   a build with billing has been uploaded.
+4. **First internal-testing upload:** the signed `.aab` from the latest green CI run's artifact.
 
 ## Log
 
@@ -81,3 +90,8 @@ values, force update or Crashlytics) and the app shows no purchases.
 - 2026-10-25: Firebase project and AdMob app created (console); release builds use the real AdMob units; a banner
   sits under the board while ads are allowed (gone after Remove ads); interstitial pacing (`interstitial_first_level`,
   `interstitial_every`, `interstitial_cap_seconds`) comes from Remote Config, with 5, 3 and 180 s as defaults.
+- 2026-10-25: after a first test on the Pixel 10: `testing-on-emulator` skill; the game and settings top bars no
+  longer sit under the status bar; "Daily #-6" before the first daily fixed (#1); much harder puzzles (about one arrow
+  in seven free at the start instead of one in three, 15–25 rounds on a 9 × 9 instead of 5–8; every level and daily
+  board changed, seed salts bumped); a clock and 1–3 stars per puzzle, best results saved and shared. Console steps
+  done: secrets, Remote Config, Play Console app and declarations.
