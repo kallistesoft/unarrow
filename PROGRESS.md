@@ -3,8 +3,8 @@
 Claude updates this file and pushes it after every step. Work happens on the `develop` branch; there will be no pull
 request until the release.
 
-**Now:** harder puzzles, timer and stars, edge-to-edge fix done after the first test on the Pixel 10; waiting on the
-store graphics, listing translations, products and the first internal-testing upload (below).
+**Now:** sliding, rotating and locked arrows with a solver behind every board, after the user found the game too
+easy; waiting on the store graphics, listing translations, products and the first internal-testing upload (below).
 **CI:** ✅ green on every push: conventions, all unit tests, coverage ≥ 90% per class, lint, debug APK, release APK
 and bundle (R8). The APKs and the `.aab` are in the run's `unarrow-<n>` artifact.
 **Blockers:** none. Local builds work on this Mac (see CLAUDE.md); GitHub Actions stays the reference.
@@ -39,6 +39,7 @@ and bundle (R8). The APKs and the `.aab` are in the run's `unarrow-<n>` artifact
 | 19e | Daily number never below #1 before the first daily | ✅ | ef78ca2 |
 | 19f | Harder puzzles: few free arrows, long chains, faster curve (seed salts bumped), `DifficultyTest` | ✅ | 0778542 |
 | 19g | Timer and stars (best per level, best daily), stars and time in shares | ✅ | f433acb |
+| 19h | Sliding, rotating and locked arrows; solver (perfect line, traps, hints); curve and daily with the mechanics | ✅ | 6c923fc |
 | 20 | Release: store graphics, listing translations, products, internal testing, pull request `develop` → `main` | ⬜ waits on you | |
 
 ✅ done · ⏳ in progress · ⬜ to do · ❌ blocked
@@ -95,3 +96,8 @@ Still open:
   in seven free at the start instead of one in three, 15–25 rounds on a 9 × 9 instead of 5–8; every level and daily
   board changed, seed salts bumped); a clock and 1–3 stars per puzzle, best results saved and shared. Console steps
   done: secrets, Remote Config, Play Console app and declarations.
+- 2026-10-25: "not hard enough, no reflection needed": a blocked arrow now slides up to its blocker and costs a life
+  (a careless tap can trap you), rotating arrows turn after every move, locked arrows wait for their key. A solver
+  (exits only, memoised) checks every board has a perfect line, picks boards with traps, measures difficulty and
+  gives the hints. Locks from level 10, rotating arrows from 20, the daily mixes all three; tips the first time each
+  appears; boards are made off the main thread. Seed salts bumped again: every board changed.

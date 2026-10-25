@@ -7,12 +7,16 @@ French (France and Canada). No account: progress stays on the device. Build prog
 
 ## The game
 
-Each arrow on the grid slides off the board when tapped, if nothing stands between it and the edge it points to.
-Tapping a blocked arrow costs one of three lives. Puzzles are generated in reverse (`core/game`, `PuzzleGenerator`),
-so every one is solvable, and the same seed always gives the same board: level *n* and the daily puzzle of a given
-day are identical on every device and in every version (`SeededRandom` is SplitMix64, never `kotlin.random`).
-The generator keeps few arrows free at a time and builds long chains of arrows waiting on each other (about one in
-seven arrows free at the start, 15–25 rounds on a 9 × 9); `DifficultyTest` guards those numbers.
+Each arrow on the grid leaves the board when tapped, if nothing stands between it and the edge it points to.
+Otherwise it slides up to the first arrow in its way and costs one of three lives: a careless tap can leave the board
+in a dead end. Arrows marked ↻ turn a quarter clockwise after every move; locked arrows (padlock, at most three
+colours told apart by shape too) can't move until the key arrow of their colour has left.
+
+Puzzles are generated in reverse (`core/game`, `PuzzleGenerator`), so every one has a perfect line (exits only, no
+life lost), and the same seed always gives the same board: level *n* and the daily puzzle of a given day are identical
+on every device and in every version (`SeededRandom` is SplitMix64, never `kotlin.random`). A `Solver` checks
+boards, picks the ones with traps, and gives the hints (the next move of a perfect line). Mechanics come one at a
+time: traps from level 4, locks from 10, rotating arrows from 20; `DifficultyTest` guards the curve.
 
 ## Modules
 
