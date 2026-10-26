@@ -1,6 +1,9 @@
 package ca.kallistesoft.unarrow.feature.game
 
 import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.core.Animatable
+import androidx.compose.animation.core.Spring
+import androidx.compose.animation.core.spring
 import androidx.compose.animation.slideInVertically
 import androidx.compose.foundation.background
 import androidx.compose.foundation.BorderStroke
@@ -36,9 +39,14 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.shadow
+import androidx.compose.ui.graphics.Brush
+import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.ui.platform.LocalInspectionMode
 import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.platform.testTag
@@ -61,11 +69,13 @@ import ca.kallistesoft.unarrow.core.designsystem.Spacing
 import ca.kallistesoft.unarrow.core.designsystem.TertiaryButton
 import ca.kallistesoft.unarrow.core.designsystem.UnarrowPreviews
 import ca.kallistesoft.unarrow.core.designsystem.UnarrowTheme
+import ca.kallistesoft.unarrow.core.designsystem.rememberReducedMotion
 import ca.kallistesoft.unarrow.core.designsystem.topBar
 import ca.kallistesoft.unarrow.core.engagement.PLAY_STORE_URL
 import ca.kallistesoft.unarrow.core.game.Levels
 import ca.kallistesoft.unarrow.core.game.Stars
 import ca.kallistesoft.unarrow.core.ui.R
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 
 /**
@@ -193,12 +203,16 @@ private fun BoxScope.PlayArea(state: GameUiState, session: GameSession, actions:
             )
         }
         Box(Modifier.weight(1f).fillMaxWidth(), contentAlignment = Alignment.Center) {
-            // The board sits on a card, like the game mock-ups on kallistesoft.ca.
+            // The board's tray: recessed, with the home daily card's accent-to-amber edge and a soft accent glow.
+            val accent = MaterialTheme.colorScheme.primary
             Surface(
-                Modifier.widthIn(max = Sizes.maxContentWidth).fillMaxWidth(),
+                Modifier
+                    .widthIn(max = Sizes.maxContentWidth)
+                    .fillMaxWidth()
+                    .shadow(Spacing.m, MaterialTheme.shapes.large, ambientColor = accent, spotColor = accent),
                 shape = MaterialTheme.shapes.large,
-                color = MaterialTheme.colorScheme.surfaceContainer,
-                border = BorderStroke(Sizes.border, UnarrowTheme.brand.cardBorder),
+                color = UnarrowTheme.gameColors.tray,
+                border = BorderStroke(Sizes.border * 2, Brush.linearGradient(listOf(accent, UnarrowTheme.gameColors.star))),
             ) {
                 BoardView(session, actions.onTap, Modifier.padding(Spacing.s).fillMaxWidth())
             }
@@ -409,12 +423,24 @@ private fun StarRow(stars: Int) {
         Modifier.testTag("stars").semantics(mergeDescendants = true) { contentDescription = label },
         horizontalArrangement = Arrangement.spacedBy(Spacing.xs),
     ) {
+        // The stars pop in one after the other, once the board's win ripple has started.
+        val motion = !LocalInspectionMode.current && !rememberReducedMotion()
         repeat(Stars.MAX) { index ->
+            val pop = remember { Animatable(if (motion) 0f else 1f) }
+            LaunchedEffect(Unit) {
+                if (motion) {
+                    delay(STAR_DELAY + index * STAR_STEP)
+                    pop.animateTo(1f, spring(dampingRatio = Spring.DampingRatioMediumBouncy))
+                }
+            }
             Icon(
                 if (index < stars) Icons.Rounded.Star else Icons.Rounded.StarBorder,
                 contentDescription = null,
                 tint = UnarrowTheme.gameColors.star,
-                modifier = Modifier.size(Sizes.touchTarget),
+                modifier = Modifier.size(Sizes.touchTarget).graphicsLayer {
+                    scaleX = pop.value
+                    scaleY = pop.value
+                },
             )
         }
     }
@@ -447,3 +473,6 @@ internal fun GamePreview() = PreviewSurface {
         GameActions(),
     )
 }
+
+private const val STAR_DELAY = 300L
+private const val STAR_STEP = 120L

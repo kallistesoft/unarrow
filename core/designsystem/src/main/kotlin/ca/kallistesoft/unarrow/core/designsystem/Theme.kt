@@ -31,6 +31,21 @@ data class GameColors(
     val star: Color,
     /** Lock and key colours (amber, blue, violet), each also drawn with its own shape for colour-blind players. */
     val locks: List<Color>,
+    /**
+     * Arrow colours by direction (up, right, down, left: the studio's blue, green, amber, coral), each 3:1 or more on
+     * both ends of the tile gradient; the arrow's shape still says the direction.
+     */
+    val directions: List<Color> = List(4) { arrow },
+    /** A piece's tile, lighter at the top, with a 1 px highlight edge and a soft shadow under it. */
+    val tileTop: Color = tile,
+    val tileBottom: Color = tile,
+    val highlight: Color = Color.White,
+    val pieceShadow: Color = Color.Black,
+    /** An empty cell: a shallow hole in the tray, shaded at its top. */
+    val hole: Color = tile,
+    val holeShade: Color = Color.Black,
+    /** The board's tray, under the holes. */
+    val tray: Color = tile,
 )
 
 // Kallistesoft "Nocturne" (kallistesoft.ca, assets/style.css): the studio's palette, in both themes.
@@ -116,6 +131,14 @@ private val LightGame = GameColors(
     streak = Nocturne.amber,
     star = Nocturne.amber,
     locks = listOf(Color(0xFFA8700F), Color(0xFF2272B0), Color(0xFF8A5CD1)),
+    directions = listOf(Color(0xFF1F6FAE), Color(0xFF2A7D4C), Color(0xFF9A6508), Color(0xFFC2412D)),
+    tileTop = Color(0xFFF5F7FC),
+    tileBottom = Color(0xFFE1E7F3),
+    highlight = Color(0xFFFFFFFF),
+    pieceShadow = Color(0x2917285A),
+    hole = Color(0xFFE3E8F2),
+    holeShade = Color(0x2917285A),
+    tray = Color(0xFFEDF1F9),
 )
 private val DarkGame = GameColors(
     arrow = Nocturne.Dark.text,
@@ -126,6 +149,14 @@ private val DarkGame = GameColors(
     streak = Nocturne.amber,
     star = Nocturne.amber,
     locks = listOf(Nocturne.amber, Color(0xFF5AA6E0), Color(0xFFA98BE3)),
+    directions = listOf(Color(0xFF6BB3EA), Color(0xFF5FD08F), Nocturne.amber, Color(0xFFFF8A76)),
+    tileTop = Color(0xFF1D2C60),
+    tileBottom = Color(0xFF122050),
+    highlight = Color(0x598FB0FF),
+    pieceShadow = Color(0x80000000),
+    hole = Color(0xFF070F2A),
+    holeShade = Color(0x99000000),
+    tray = Color(0xFF0A1433),
 )
 
 private val LightColors = with(Nocturne.Light) {

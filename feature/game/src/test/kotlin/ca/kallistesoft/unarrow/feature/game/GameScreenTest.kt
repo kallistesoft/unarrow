@@ -286,6 +286,37 @@ class GameScreenTest {
     }
 
     @Test
+    fun `an exit leaves a trail and a burst, a win ripples, mid-animation frames draw`() {
+        var state by androidx.compose.runtime.mutableStateOf(GameUiState(session()))
+        compose.setContent { UnarrowTheme { GameContent(state, GameActions()) } }
+        compose.mainClock.autoAdvance = false
+        state = state.copy(session = session(exits = listOf(up)).copy(board = Board(2, 2, listOf(right, left, down))))
+        compose.mainClock.advanceTimeBy(200) // mid-exit: trail and sparks
+        compose.onRoot().captureToImage()
+        state = state.copy(session = state.session!!.copy(board = Board(2, 2, emptyList()), status = GameStatus.WON, stars = 3))
+        compose.mainClock.advanceTimeBy(300) // mid-ripple, stars popping
+        compose.onRoot().captureToImage()
+        compose.mainClock.autoAdvance = true
+        compose.onNodeWithText("Solved!").assertExists()
+    }
+
+    @Test
+    fun `with animations off the board is still and the same pieces show`() {
+        val resolver = org.robolectric.RuntimeEnvironment.getApplication().contentResolver
+        android.provider.Settings.Global.putFloat(resolver, android.provider.Settings.Global.ANIMATOR_DURATION_SCALE, 0f)
+        try {
+            val key = Arrow(5, 1, 1, Direction.UP, key = 0)
+            val board = Board(2, 2, listOf(up.copy(rotating = true), right.copy(lock = 0), key))
+            compose.setContent { UnarrowTheme { GameContent(GameUiState(session().copy(board = board, hintId = up.id)), GameActions()) } }
+            compose.onRoot().captureToImage()
+            compose.onNodeWithContentDescription("Arrow pointing right, amber lock").assertExists()
+            compose.onNodeWithContentDescription("Arrow pointing up, amber key").assertExists()
+        } finally {
+            android.provider.Settings.Global.putFloat(resolver, android.provider.Settings.Global.ANIMATOR_DURATION_SCALE, 1f)
+        }
+    }
+
+    @Test
     fun `restart starts the puzzle again`() {
         var restarts = 0
         show(GameUiState(session()), GameActions(onRestart = { restarts++ }))
