@@ -25,7 +25,10 @@ mkdir -p build/emulator-test
 
 When both are connected, every adb call needs a target: `export ANDROID_SERIAL=emulator-5554` (or the phone's
 `ip:port`) before running the scripts. The `android` CLI ignores `ANDROID_SERIAL`: pass `--device=emulator-5554` to
-every `android layout`, `android input` and `android screen` call, or it refuses to run ("Multiple devices"). Never run `connectedAndroidTest` against the phone: it uninstalls the app
+every `android layout`, `android input` and `android screen` call, or it refuses to run ("Multiple devices").
+With animations on, the home (drifting arrows) and a hinted board never go idle: use `android layout --no-idle` and
+tap the printed coordinates with `adb shell input tap`, as `android input tap` waits for idle and reports
+"No matching elements". Never run `connectedAndroidTest` against the phone: it uninstalls the app
 from it. The phone is only there when the user has wireless debugging on; if `adb connect` fails, use the
 emulator and say so.
 

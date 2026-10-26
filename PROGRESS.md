@@ -43,6 +43,7 @@ and bundle (R8). The APKs and the `.aab` are in the run's `unarrow-<n>` artifact
 | 19i | Nocturne redesign (studio palette, Manrope / JetBrains Mono, cards and chips), theme choice, Kallistesoft icon and splash, screenshot tests; English/French only | ✅ | 9c7b059, a9e4b42, 2e637d6, 1599e94 |
 | 19j | Landing home like the Neon games, in Nocturne: gradient and drifting arrows, glowing two-tone title and Play pill, records, special daily card (solved title fixed), how to play, sound and site footer | ✅ | 9e08bf3 |
 | 19k | History of levels and dailies (best stars and time, migration of earlier data), replay after a rewarded ad; home records in equal columns | ✅ | 7802670, ece453b |
+| 19l | Fancier board: pieces on a tray, direction colours, richer locks/keys/rotation, exit trails, win ripple | ✅ | 77c2334 |
 | 20 | Release: store graphics, listing translations, products, internal testing, pull request `develop` → `main` | ⬜ waits on you | |
 
 ✅ done · ⏳ in progress · ⬜ to do · ❌ blocked
@@ -124,3 +125,7 @@ Still open:
   (never the current level, the streak or the last solved day) and has no interstitial. The progress now keeps each
   level's and each daily's best result; earlier data moved over (level stars with an unknown time, the last solved
   daily). Home records sit in three equal columns.
+- 2026-10-25: the board looks like game pieces on a tray: raised tiles with depth, holes for empty cells, arrows
+  coloured by direction (blue, green, amber, coral), locked tiles in their lock's colour with a large padlock, glowing
+  keys, a spinning ring on rotating arrows; exits leave a trail and a burst, a win ripples before the stars pop in.
+  Still when the system's animations are off.
