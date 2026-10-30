@@ -3,8 +3,8 @@
 Claude updates this file and pushes it after every step. Work happens on the `develop` branch; there will be no pull
 request until the release.
 
-**Now:** build 34 is in internal testing; the store listing is drafted in three languages; waiting on the AI
-declaration and the in-app products (below).
+**Now:** build 34 is in internal testing; the store listing is drafted in three languages and the in-app
+products are active; waiting on the AI declaration and a purchase test (below).
 **CI:** ✅ green on every push: conventions, all unit tests, coverage ≥ 90% per class, lint, debug APK, release APK
 and bundle (R8). The APKs and the `.aab` are in the run's `unarrow-<n>` artifact.
 **Blockers:** none. Local builds work on this Mac (see CLAUDE.md); GitHub Actions stays the reference.
@@ -44,7 +44,7 @@ and bundle (R8). The APKs and the `.aab` are in the run's `unarrow-<n>` artifact
 | 19j | Landing home like the Neon games, in Nocturne: gradient and drifting arrows, glowing two-tone title and Play pill, records, special daily card (solved title fixed), how to play, sound and site footer | ✅ | 9e08bf3 |
 | 19k | History of levels and dailies (best stars and time, migration of earlier data), replay after a rewarded ad; home records in equal columns | ✅ | 7802670, ece453b |
 | 19l | Fancier board: pieces on a tray, direction colours, richer locks/keys/rotation, exit trails, win ripple | ✅ | 77c2334 |
-| 20 | Release: store graphics ✅, listing translations ✅, internal testing ✅, products, pull request `develop` → `main` | ⏳ | |
+| 20 | Release: store graphics ✅, listing translations ✅, internal testing ✅, products ✅, pull request `develop` → `main` | ⏳ | |
 
 ✅ done · ⏳ in progress · ⬜ to do · ❌ blocked
 
@@ -84,11 +84,12 @@ Done on 2026-10-30:
 - ✅ **Listings (saved as a draft):** en-US, fr-CA and fr-FR texts, 512 px icon, feature graphics and 5 phone screenshots
   per language in both themes, from `tools/make_store_graphics.py`.
 
+- ✅ **In-app products:** `remove_ads` (3.99 CAD) and `hints_10` (0.99 CAD), purchase option `buy`, active.
+
 Still open:
 
 1. **AI declaration:** the listing's review step asks whether to label AI-generated assets; the owner answers it.
-2. **In-app products:** `remove_ads` (one-time, 3.99 CAD) and `hints_10` (consumable, 0.99 CAD).
-3. **Before production:** test the difficulty with a few people, reword "calm" and "relaxing" if needed, pull request
+2. **Before production:** test the difficulty with a few people, reword "calm" and "relaxing" if needed, pull request
    `develop` → `main`, then link the store on the existing AdMob entry `~7253132965` at launch.
 
 ## Log
@@ -137,3 +138,4 @@ Still open:
   Still when the system's animations are off.
 - 2026-10-30: first internal-testing release (build 34); category, contact details and the three listings filled in;
   store graphics generated from the screenshot references; fr-CA title shortened to 27 characters.
+- 2026-10-30: in-app products `remove_ads` and `hints_10` created and active.
