@@ -1,6 +1,6 @@
 # Fiche Play : français (Canada) (fr-CA)
 
-**Titre** (30 max) : Unarrow : Casse-tête de flèches
+**Titre** (30 max) : Unarrow : Casse-tête fléché
 
 **Description courte** (80 max) : Touchez les flèches pour les faire sortir. Un nouveau défi chaque jour.
 

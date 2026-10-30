@@ -3,8 +3,8 @@
 Claude updates this file and pushes it after every step. Work happens on the `develop` branch; there will be no pull
 request until the release.
 
-**Now:** sliding, rotating and locked arrows with a solver behind every board, after the user found the game too
-easy; waiting on the store graphics, listing translations, products and the first internal-testing upload (below).
+**Now:** build 34 is in internal testing; the store listing is drafted in three languages; waiting on the AI
+declaration and the in-app products (below).
 **CI:** ✅ green on every push: conventions, all unit tests, coverage ≥ 90% per class, lint, debug APK, release APK
 and bundle (R8). The APKs and the `.aab` are in the run's `unarrow-<n>` artifact.
 **Blockers:** none. Local builds work on this Mac (see CLAUDE.md); GitHub Actions stays the reference.
@@ -44,7 +44,7 @@ and bundle (R8). The APKs and the `.aab` are in the run's `unarrow-<n>` artifact
 | 19j | Landing home like the Neon games, in Nocturne: gradient and drifting arrows, glowing two-tone title and Play pill, records, special daily card (solved title fixed), how to play, sound and site footer | ✅ | 9e08bf3 |
 | 19k | History of levels and dailies (best stars and time, migration of earlier data), replay after a rewarded ad; home records in equal columns | ✅ | 7802670, ece453b |
 | 19l | Fancier board: pieces on a tray, direction colours, richer locks/keys/rotation, exit trails, win ripple | ✅ | 77c2334 |
-| 20 | Release: store graphics, listing translations, products, internal testing, pull request `develop` → `main` | ⬜ waits on you | |
+| 20 | Release: store graphics ✅, listing translations ✅, internal testing ✅, products, pull request `develop` → `main` | ⏳ | |
 
 ✅ done · ⏳ in progress · ⬜ to do · ❌ blocked
 
@@ -76,14 +76,20 @@ Done in the consoles:
   Brazil 14+ because of in-app purchases) are filled in.
 - ✅ **Privacy policy:** `https://kallistesoft.ca/en/privacy/unarrow/` (FR: `/confidentialite/unarrow/`).
 
+Done on 2026-10-30:
+
+- ✅ **Internal testing:** build 34 (1.0.0) is live for the "KallisteSoft team" list; opt-in link
+  https://play.google.com/apps/internaltest/4701454878350786133
+- ✅ **Store settings:** category Puzzle, contact contact@kallistesoft.ca, website https://kallistesoft.ca.
+- ✅ **Listings (saved as a draft):** en-US, fr-CA and fr-FR texts, 512 px icon, feature graphics and 5 phone screenshots
+  per language in both themes, from `tools/make_store_graphics.py`.
+
 Still open:
 
-1. **Store graphics:** 512 × 512 icon ✅ (`store/icon-512.png`, from `tools/make_icon.py`), 1024 × 500 feature
-   graphic and phone screenshots still to make, from the Nocturne redesign (light and dark).
-2. **Listing translations:** paste the fr-CA and fr-FR texts from `store/listing-fr-CA.md` and `store/listing-fr-FR.md`.
-3. **In-app products:** `remove_ads` (one-time, $3.99) and `hints_10` (consumable, $0.99); Play only allows them once
-   a build with billing has been uploaded.
-4. **First internal-testing upload:** the signed `.aab` from the latest green CI run's artifact.
+1. **AI declaration:** the listing's review step asks whether to label AI-generated assets; the owner answers it.
+2. **In-app products:** `remove_ads` (one-time, 3.99 CAD) and `hints_10` (consumable, 0.99 CAD).
+3. **Before production:** test the difficulty with a few people, reword "calm" and "relaxing" if needed, pull request
+   `develop` → `main`, then link the store on the existing AdMob entry `~7253132965` at launch.
 
 ## Log
 
@@ -129,3 +135,5 @@ Still open:
   coloured by direction (blue, green, amber, coral), locked tiles in their lock's colour with a large padlock, glowing
   keys, a spinning ring on rotating arrows; exits leave a trail and a burst, a win ripples before the stars pop in.
   Still when the system's animations are off.
+- 2026-10-30: first internal-testing release (build 34); category, contact details and the three listings filled in;
+  store graphics generated from the screenshot references; fr-CA title shortened to 27 characters.
