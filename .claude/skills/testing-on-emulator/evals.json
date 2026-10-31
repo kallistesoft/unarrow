@@ -1,0 +1,36 @@
+[
+  {
+    "skills": ["testing-on-emulator"],
+    "query": "Test the app on the emulator",
+    "files": [],
+    "expected_behavior": [
+      "Fetches from origin and confirms the branch is up to date before building",
+      "Runs scripts/emulator.sh, then scripts/install.sh debug --fresh, without reading the scripts first",
+      "Covers at least home, a level won and a level lost, the daily puzzle and Settings from reference/test-plan.md, reading a screenshot of each screen",
+      "Runs scripts/check_crash.sh after each flow",
+      "Ends with the report table, including a 'Not tested' line"
+    ]
+  },
+  {
+    "skills": ["testing-on-emulator"],
+    "query": "I'm about to upload to Play. Check the release build works on the simulator.",
+    "files": [],
+    "expected_behavior": [
+      "Installs with scripts/install.sh release --fresh (R8 build signed with the debug key), not the debug build",
+      "Runs the smoke test, including a relaunch to check saved progress and process death on the game screen",
+      "Runs scripts/check_crash.sh release after each flow and reports any SerializationException or ClassNotFoundException as an R8 problem",
+      "Does not tap the real ads of the release build"
+    ]
+  },
+  {
+    "skills": ["testing-on-emulator"],
+    "query": "Check on my phone that the game screen isn't under the status bar any more",
+    "files": [],
+    "expected_behavior": [
+      "Connects the Pixel 10 with adb mdns services and adb connect <ip:port>, and sets ANDROID_SERIAL to it",
+      "Falls back to the emulator (emulator-5554) and says so if the phone can't be reached",
+      "Opens a game with `android input tap text=Play`, captures a screenshot and reads it, checking the top bar against the status bar and the banner against the gesture bar",
+      "Does not clear the app's data on the phone without asking"
+    ]
+  }
+]
