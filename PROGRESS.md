@@ -3,8 +3,8 @@
 Claude updates this file and pushes it after every step. Work happens on the `develop` branch; there will be no pull
 request until the release.
 
-**Now:** Google rejected build 34 on 2026-10-31 (crash at startup, release builds only). Fixed on `develop`; build 39 is live
-in internal testing. Once it's checked on the Pixel, it goes to production review.
+**Now:** Google rejected build 34 on 2026-10-31 (crash at startup, release builds only). Fixed on `develop`; build 43 is live
+in internal testing. Once it is checked on the Pixel, it goes to production review.
 **CI:** ✅ green on every push: conventions, all unit tests, coverage ≥ 90% per class, lint, debug APK, release APK
 and bundle (R8). The APKs and the `.aab` are in the run's `unarrow-<n>` artifact.
 **Blockers:** none. Local builds work on this Mac (see CLAUDE.md); GitHub Actions stays the reference.
@@ -92,8 +92,8 @@ Done on 2026-10-30:
 
 Still open:
 
-1. **Test on the Pixel:** build 39 from the internal test: launch, ads, both purchases.
-2. **Resubmit:** promote build 39 to production and send it for review. No appeal needed.
+1. **Test on the Pixel:** build 43 from the internal test: new home buttons, both purchases. Ads need the store link.
+2. **Resubmit:** promote build 43 to production and send it for review. No appeal needed.
 3. **Difficulty:** a few testers, then reword "calm" and "relaxing" if needed.
 4. **At launch:** link the store on the existing AdMob entry `~7253132965`, not through a new app.
 
@@ -151,3 +151,4 @@ Still open:
 - 2026-10-31: build 39 (`ad0f90d`) live in internal testing; CI's release APK launches on the emulator.
 - 2026-10-31: on the Pixel, build 39 played to level 11 without a crash. Ads answer "no fill" (code 3), as AdMob limits
   the app until a store is linked. Daily and Remove ads buttons on home now use the primary style.
+- 2026-10-31: build 43 (`effd355`) live in internal testing; CI release APK launches on the emulator.
