@@ -3,7 +3,8 @@
 Claude updates this file and pushes it after every step. Work happens on the `develop` branch; there will be no pull
 request until the release.
 
-**Now:** build 34 is in Google's review for production; it goes live automatically on approval.
+**Now:** Google rejected build 34 on 2026-10-31 (crash at startup, release builds only). Fixed on `develop`; the fixed
+build still has to be uploaded and sent for review.
 **CI:** ✅ green on every push: conventions, all unit tests, coverage ≥ 90% per class, lint, debug APK, release APK
 and bundle (R8). The APKs and the `.aab` are in the run's `unarrow-<n>` artifact.
 **Blockers:** none. Local builds work on this Mac (see CLAUDE.md); GitHub Actions stays the reference.
@@ -86,13 +87,13 @@ Done on 2026-10-30:
 - ✅ **In-app products:** `remove_ads` (3.99 CAD) and `hints_10` (0.99 CAD), purchase option `buy`, active.
 
 - ✅ **AI declaration:** assets not labeled (real screens, script-drawn graphics).
-- ✅ **Production:** build 34 sent for review on 2026-10-30, 177 countries/regions plus rest of world, full rollout,
-  managed publishing off, so it goes live automatically on approval.
+- ❌ **Production:** build 34 sent for review on 2026-10-30, 177 countries/regions plus rest of world, full rollout,
+  managed publishing off. Rejected 2026-10-31 under the broken functionality policy: "Unarrow keeps stopping".
 
 Still open:
 
-1. **Google review:** usually up to 7 days.
-2. **Test on the Pixel:** both purchases, from the internal test.
+1. **Resubmit:** upload the fixed build and send it for review. No appeal needed.
+2. **Test on the Pixel:** the fixed build first, then both purchases, from the internal test. Build 34 crashes on launch.
 3. **Difficulty:** a few testers, then reword "calm" and "relaxing" if needed.
 4. **At launch:** link the store on the existing AdMob entry `~7253132965`, not through a new app.
 
@@ -144,3 +145,6 @@ Still open:
   store graphics generated from the screenshot references; fr-CA title shortened to 27 characters.
 - 2026-10-30: in-app products `remove_ads` and `hints_10` created and active.
 - 2026-10-30: build 34 sent to Google for production review, all countries.
+- 2026-10-31: build 34 rejected. Every release launch crashed: R8 stripped `WorkDatabase_Impl`, which WorkManager (pulled
+  in by the ads SDK) opens by reflection. Reproduced on the emulator, keep rules added to `app/proguard-rules.pro`,
+  release build checked on the emulator (no network, so ads not exercised).
