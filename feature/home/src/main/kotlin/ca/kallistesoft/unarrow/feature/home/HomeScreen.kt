@@ -82,10 +82,9 @@ import ca.kallistesoft.unarrow.core.designsystem.Chip
 import ca.kallistesoft.unarrow.core.designsystem.HeroButton
 import ca.kallistesoft.unarrow.core.designsystem.MonoLabel
 import ca.kallistesoft.unarrow.core.designsystem.PreviewSurface
-import ca.kallistesoft.unarrow.core.designsystem.SecondaryButton
+import ca.kallistesoft.unarrow.core.designsystem.PrimaryButton
 import ca.kallistesoft.unarrow.core.designsystem.Sizes
 import ca.kallistesoft.unarrow.core.designsystem.Spacing
-import ca.kallistesoft.unarrow.core.designsystem.TertiaryButton
 import ca.kallistesoft.unarrow.core.designsystem.UnarrowPreviews
 import ca.kallistesoft.unarrow.core.designsystem.UnarrowTheme
 import ca.kallistesoft.unarrow.core.designsystem.rememberReducedMotion
@@ -206,7 +205,7 @@ internal fun HomeContent(
                                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                                     modifier = Modifier.align(Alignment.CenterHorizontally),
                                 )
-                                state.removeAdsPrice != null -> TertiaryButton(
+                                state.removeAdsPrice != null -> PrimaryButton(
                                     stringResource(R.string.home_remove_ads) + " · " + state.removeAdsPrice,
                                     onClick = onRemoveAds,
                                 )
@@ -333,9 +332,9 @@ private fun DailyCard(state: HomeUiState, onDaily: () -> Unit, onRetryDaily: () 
                 state.dailyResult?.let { Chip(resultText(it), Modifier.testTag("daily_result")) }
             }
             if (!state.dailyDone) {
-                SecondaryButton(stringResource(R.string.home_daily), onClick = onDaily, enabled = !state.loading)
+                PrimaryButton(stringResource(R.string.home_daily), onClick = onDaily, enabled = !state.loading)
             } else if (state.rewardedReady) {
-                SecondaryButton(stringResource(R.string.home_daily_retry_ad), onClick = onRetryDaily)
+                PrimaryButton(stringResource(R.string.home_daily_retry_ad), onClick = onRetryDaily)
             }
         }
     }

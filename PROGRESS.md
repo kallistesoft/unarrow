@@ -149,3 +149,5 @@ Still open:
   in by the ads SDK) opens by reflection. Reproduced on the emulator, keep rules added to `app/proguard-rules.pro`,
   release build checked on the emulator (no network, so ads not exercised).
 - 2026-10-31: build 39 (`ad0f90d`) live in internal testing; CI's release APK launches on the emulator.
+- 2026-10-31: on the Pixel, build 39 played to level 11 without a crash. Ads answer "no fill" (code 3), as AdMob limits
+  the app until a store is linked. Daily and Remove ads buttons on home now use the primary style.
