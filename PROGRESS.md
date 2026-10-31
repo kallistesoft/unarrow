@@ -3,8 +3,8 @@
 Claude updates this file and pushes it after every step. Work happens on the `develop` branch; there will be no pull
 request until the release.
 
-**Now:** Google rejected build 34 on 2026-10-31 (crash at startup, release builds only). Fixed on `develop`; the fixed
-build still has to be uploaded and sent for review.
+**Now:** Google rejected build 34 on 2026-10-31 (crash at startup, release builds only). Fixed on `develop`; build 39 is live
+in internal testing. Once it's checked on the Pixel, it goes to production review.
 **CI:** ✅ green on every push: conventions, all unit tests, coverage ≥ 90% per class, lint, debug APK, release APK
 and bundle (R8). The APKs and the `.aab` are in the run's `unarrow-<n>` artifact.
 **Blockers:** none. Local builds work on this Mac (see CLAUDE.md); GitHub Actions stays the reference.
@@ -92,8 +92,8 @@ Done on 2026-10-30:
 
 Still open:
 
-1. **Resubmit:** upload the fixed build and send it for review. No appeal needed.
-2. **Test on the Pixel:** the fixed build first, then both purchases, from the internal test. Build 34 crashes on launch.
+1. **Test on the Pixel:** build 39 from the internal test: launch, ads, both purchases.
+2. **Resubmit:** promote build 39 to production and send it for review. No appeal needed.
 3. **Difficulty:** a few testers, then reword "calm" and "relaxing" if needed.
 4. **At launch:** link the store on the existing AdMob entry `~7253132965`, not through a new app.
 
@@ -148,3 +148,4 @@ Still open:
 - 2026-10-31: build 34 rejected. Every release launch crashed: R8 stripped `WorkDatabase_Impl`, which WorkManager (pulled
   in by the ads SDK) opens by reflection. Reproduced on the emulator, keep rules added to `app/proguard-rules.pro`,
   release build checked on the emulator (no network, so ads not exercised).
+- 2026-10-31: build 39 (`ad0f90d`) live in internal testing; CI's release APK launches on the emulator.
