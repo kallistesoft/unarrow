@@ -152,3 +152,4 @@ Still open:
 - 2026-10-31: on the Pixel, build 39 played to level 11 without a crash. Ads answer "no fill" (code 3), as AdMob limits
   the app until a store is linked. Daily and Remove ads buttons on home now use the primary style.
 - 2026-10-31: build 43 (`effd355`) live in internal testing; CI release APK launches on the emulator.
+- 2026-10-31: rotating tiles get a closed ring: the open one looked cut off at the top. Its spin is gone with the gap.

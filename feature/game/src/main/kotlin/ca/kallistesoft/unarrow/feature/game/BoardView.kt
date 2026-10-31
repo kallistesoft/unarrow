@@ -62,7 +62,7 @@ import kotlin.math.sin
  * The board, as game pieces on a tray: empty cells are shallow holes; each arrow sits on a raised tile (lighter at the
  * top, a highlight edge, a soft shadow) and is coloured by its direction (up blue, right green, down amber, left coral),
  * its shape still saying the direction. Locked tiles take their lock's colour and a large padlock (round, square or
- * diamond); keys glow softly until used; rotating tiles wear an accent ring that spins as they turn.
+ * diamond); keys glow softly until used; rotating tiles wear an accent ring.
  *
  * Moves: an exit zips out with a short trail and a burst at the edge; a slide glides, then shakes and flashes coral
  * (a shake alone when it already touched its blocker; a locked tap only shakes); the hint pulses an accent outline;
@@ -115,7 +115,6 @@ internal fun BoardView(session: GameSession, onTap: (Int) -> Unit, modifier: Mod
                     board,
                     colors,
                     accent,
-                    motion,
                     flash = if (involved) flash.asState() else NO_FLASH,
                     shake = if (arrow.id == blocked?.arrowId) shake.asState() else NO_SHAKE,
                     hint = if (arrow.id == session.hintId) pulse else null,
@@ -210,7 +209,7 @@ private fun pieceCache(tile: Float, top: Color, bottom: Color): PieceCache {
 
 /**
  * An arrow on its tile, animated as it changes: it glides to a new cell after a slide, turns a quarter at a time
- * (always clockwise, its ring spinning), its padlock pops away when the key leaves; [flash] tints it coral, [shake]
+ * (always clockwise), its padlock pops away when the key leaves; [flash] tints it coral, [shake]
  * bumps it towards its blocker, [hint] outlines it.
  */
 @Composable
@@ -219,7 +218,6 @@ private fun PlacedArrow(
     board: Board,
     colors: GameColors,
     accent: Color,
-    motion: Boolean,
     flash: State<Float>,
     shake: State<Float>,
     hint: State<Float>?,
@@ -227,14 +225,9 @@ private fun PlacedArrow(
     val row = animateFloatAsState(arrow.row.toFloat(), tween(SLIDE_MILLIS, easing = FastOutSlowInEasing), label = "row")
     val col = animateFloatAsState(arrow.col.toFloat(), tween(SLIDE_MILLIS, easing = FastOutSlowInEasing), label = "col")
     val turn = remember { Animatable(arrow.direction.degrees) }
-    val spin = remember { Animatable(0f) }
     LaunchedEffect(arrow.direction) {
         val delta = Math.floorMod((arrow.direction.degrees - turn.value).toInt(), FULL_TURN)
         if (delta == 0) return@LaunchedEffect
-        if (motion) {
-            spin.snapTo(0f)
-            spin.animateTo(1f, tween(TURN_MILLIS))
-        }
         turn.animateTo(turn.value + delta, tween(TURN_MILLIS))
     }
     val locked = animateFloatAsState(if (board.isLocked(arrow)) 1f else 0f, tween(UNLOCK_MILLIS), label = "lock")
@@ -277,7 +270,7 @@ private fun PlacedArrow(
                             style = Stroke(width = tile * (HINT_STROKE + HINT_STROKE_PULSE * pulse.value)),
                         )
                     }
-                    if (arrow.rotating) drawRing(half, accent, spin.value)
+                    if (arrow.rotating) drawRing(half, accent)
                     // A locked arrow is drawn in the text colour, so the lock's colour is the only colour on its tile.
                     val glyph = when {
                         hint != null -> colors.hint
@@ -379,18 +372,9 @@ private fun DrawScope.drawGlyph(cache: PieceCache, color: Color) {
     drawPath(cache.head, color)
 }
 
-/** The accent ring of a rotating tile: an open circle that spins once as the arrow turns. */
-private fun DrawScope.drawRing(half: Float, accent: Color, spin: Float) {
-    val radius = half * RING_RADIUS
-    drawArc(
-        accent,
-        startAngle = RING_START + spin * FULL_TURN,
-        sweepAngle = RING_SWEEP,
-        useCenter = false,
-        topLeft = Offset(half - radius, half - radius),
-        size = Size(radius * 2, radius * 2),
-        style = Stroke(width = half * RING_STROKE, cap = StrokeCap.Round),
-    )
+/** The accent ring of a rotating tile. */
+private fun DrawScope.drawRing(half: Float, accent: Color) {
+    drawCircle(accent, half * RING_RADIUS, Offset(half, half), style = Stroke(width = half * RING_STROKE))
 }
 
 /** A large padlock: a shackle over a body whose shape tells the colour apart (round, square, diamond). */
@@ -505,8 +489,6 @@ private const val KEY_GLOW_ALPHA = 0.22f
 private const val KEY_GLOW_SIZE = 2.2f
 private const val RING_RADIUS = 0.94f
 private const val RING_STROKE = 0.07f
-private const val RING_START = -60f
-private const val RING_SWEEP = 300f
 
 // Hint outline.
 private const val HINT_STROKE = 0.05f
